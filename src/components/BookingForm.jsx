@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -13,11 +13,14 @@ import {
   Lock, 
   AlertCircle,
   FileText,
-  HelpCircle
+  ExternalLink,
+  CalendarCheck,
+  Link2
 } from 'lucide-react';
 import { submitBooking } from '../lib/supabase';
 import { initiateRazorpayCheckout } from '../lib/razorpay';
 import { READING_SERVICES } from './Services';
+import { DEFAULT_CALENDLY_URL, buildCalendlyUrl, openCalendlyPopup } from '../lib/calendly';
 
 export default function BookingForm({ selectedService, onServiceChange }) {
   const initialService = selectedService || READING_SERVICES[0];
@@ -35,7 +38,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     
     // Live Zoom specific details
     preferredDate: '',
-    preferredTime: '18:00',
+    preferredTime: '',
     zoomNotes: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   });
@@ -44,12 +47,48 @@ export default function BookingForm({ selectedService, onServiceChange }) {
   const [confirmed, setConfirmed] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Calendly + Zoom integration states
+  const [calendlyUrl, setCalendlyUrl] = useState(DEFAULT_CALENDLY_URL);
+  const [isEditingCalendlyUrl, setIsEditingCalendlyUrl] = useState(false);
+  const [calendlyScheduled, setCalendlyScheduled] = useState(false);
+  const [calendlyEventData, setCalendlyEventData] = useState(null);
+
   // Synchronize when parent prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedService) {
       setFormData(prev => ({ ...prev, serviceId: selectedService.id }));
     }
   }, [selectedService]);
+
+  // Listen for Calendly postMessage events (e.g. calendly.event_scheduled)
+  useEffect(() => {
+    const handleCalendlyMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      
+      if (e.data.event === 'calendly.event_scheduled') {
+        console.log('Calendly Event Scheduled:', e.data.payload);
+        setCalendlyScheduled(true);
+        setCalendlyEventData(e.data.payload);
+
+        // Auto-extract date & time if available
+        if (e.data.payload?.event?.start_time) {
+          try {
+            const dateObj = new Date(e.data.payload.event.start_time);
+            setFormData(prev => ({
+              ...prev,
+              preferredDate: dateObj.toISOString().split('T')[0],
+              preferredTime: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+          } catch (err) {
+            console.warn('Could not parse scheduled date:', err);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleCalendlyMessage);
+    return () => window.removeEventListener('message', handleCalendlyMessage);
+  }, []);
 
   const activeService = READING_SERVICES.find(s => s.id === formData.serviceId) || READING_SERVICES[0];
   const isOffline = activeService.type === 'offline';
@@ -74,11 +113,6 @@ export default function BookingForm({ selectedService, onServiceChange }) {
         setErrorMsg('Please share your questions or situation so the reader has all details needed for your offline report.');
         return;
       }
-    } else {
-      if (!formData.preferredDate) {
-        setErrorMsg('Please select your preferred date for the 30-minute Zoom session.');
-        return;
-      }
     }
 
     setSubmitting(true);
@@ -94,7 +128,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
         try {
           const notesContent = isOffline 
             ? `[Focus: ${formData.focusArea}] [Birth/Zodiac: ${formData.birthDetails.trim() || 'N/A'}] Questions & Context: ${formData.offlineQuestions.trim()}`
-            : (formData.zoomNotes.trim() || 'No additional notes provided');
+            : `[Zoom Session via Calendly] [Scheduled: ${calendlyScheduled ? 'Yes' : 'Pending'}] [Calendly Event: ${calendlyEventData?.event?.uri || 'N/A'}] Notes: ${formData.zoomNotes.trim() || 'None'}`;
 
           const payload = {
             name: formData.name.trim(),
@@ -102,13 +136,13 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             phone: formData.phone.trim(),
             service_title: activeService.title,
             price: activeService.price,
-            format: isOffline ? 'Offline Email Report' : 'Live Zoom Video (30 Min)',
+            format: isOffline ? 'Offline Email Report' : 'Live Zoom Video (30 Min) - Calendly',
             preferred_date: isOffline 
               ? new Date().toISOString().split('T')[0] 
-              : formData.preferredDate,
+              : (formData.preferredDate || 'Scheduled via Calendly'),
             preferred_time: isOffline 
               ? 'Delivery within 24–48 hrs' 
-              : formData.preferredTime,
+              : (formData.preferredTime || 'Confirmed on Calendar'),
             timezone: formData.timezone,
             notes: notesContent,
             payment_id: paymentDetails.paymentId,
@@ -124,7 +158,8 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             setConfirmed({
               ...result.booking,
               paymentId: paymentDetails.paymentId,
-              isOffline
+              isOffline,
+              calendlyScheduled
             });
           } else {
             setErrorMsg('Payment succeeded, but could not save booking. Please contact tarotxofficial@gmail.com with ID: ' + paymentDetails.paymentId);
@@ -144,6 +179,12 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     });
   };
 
+  const embeddedCalendlyUrl = buildCalendlyUrl(calendlyUrl, {
+    name: formData.name.trim(),
+    email: formData.email.trim(),
+    notes: formData.zoomNotes.trim()
+  });
+
   return (
     <section id="booking" className="py-20 border-t border-slate-800/80 scroll-mt-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -158,7 +199,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             Book Your Reading
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
-            Choose your preferred service, enter your details, and proceed with 100% secure payment via Razorpay.
+            Choose your preferred service, schedule your session with automatic Zoom integration, and complete secure checkout.
           </p>
         </div>
 
@@ -189,7 +230,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                         {srv.type === 'offline' ? (
                           <Mail className={`w-4 h-4 ${isSel ? 'text-gold-400' : 'text-slate-500'}`} />
                         ) : (
-                          <Video className={`w-4 h-4 ${isSel ? 'text-gold-400' : 'text-slate-500'}`} />
+                          <Video className={`w-4 h-4 ${isSel ? 'text-cyan-400' : 'text-slate-500'}`} />
                         )}
                         <span className={`font-cinzel text-sm font-bold ${isSel ? 'text-slate-100' : 'text-slate-300'}`}>
                           {srv.title}
@@ -224,13 +265,18 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               </>
             ) : (
               <>
-                <Video className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
+                <Video className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <span className="font-cinzel text-gold-300 font-bold uppercase tracking-wider block">
-                    1-to-1 Live Video Zoom Reading — ₹999
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-cinzel text-gold-300 font-bold uppercase tracking-wider">
+                      1-to-1 Live Video Zoom Reading — ₹999
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
+                      Calendly + Zoom Integrated
+                    </span>
+                  </div>
                   <p className="text-slate-300 leading-relaxed">
-                    A private 30-minute face-to-face video consultation. Pick your preferred date and time slot below. Your private Zoom meeting link and calendar invite will be dispatched to your email.
+                    A private 30-minute face-to-face video consultation. Pick your preferred date and time slot on the integrated <strong>Calendly scheduler</strong> below. Your private Zoom meeting link, passcode, and calendar invite are generated automatically.
                   </p>
                 </div>
               </>
@@ -273,7 +319,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300 flex items-center justify-between">
                   <span>Email Address *</span>
                   <span className="text-[10px] text-gold-400 lowercase font-mono">
-                    {isOffline ? '(report sent here)' : '(zoom link sent here)'}
+                    {isOffline ? '(report sent here)' : '(zoom invite sent here)'}
                   </span>
                 </label>
                 <div className="relative">
@@ -292,7 +338,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               {/* Phone / WhatsApp */}
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
-                  Phone / WhatsApp (Recommended for updates)
+                  Phone / WhatsApp (Recommended for meeting reminders)
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -373,52 +419,118 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               </div>
             )}
 
-            {/* ADAPTIVE FIELDS: LIVE ZOOM (₹999) */}
+            {/* ADAPTIVE FIELDS: LIVE ZOOM VIA CALENDLY (₹999) */}
             {!isOffline && (
-              <div className="space-y-5 pt-2 border-t border-slate-800">
-                <div className="flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-wider">
-                  <Calendar className="w-4 h-4" />
-                  <span>2. Schedule Your 30-Minute Zoom Session</span>
+              <div className="space-y-6 pt-2 border-t border-slate-800">
+                
+                {/* Integration Header & Status */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center space-x-2 text-cyan-300 text-xs font-cinzel uppercase tracking-wider font-bold">
+                    <CalendarCheck className="w-4 h-4 text-cyan-400" />
+                    <span>2. Select Live Zoom Slot via Calendly</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => openCalendlyPopup({ 
+                        url: calendlyUrl, 
+                        prefill: { name: formData.name, email: formData.email, notes: formData.zoomNotes } 
+                      })}
+                      className="text-[11px] font-mono text-gold-400 hover:text-gold-300 flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-gold-400/10 border border-gold-400/20"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Open Popup</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingCalendlyUrl(!isEditingCalendlyUrl)}
+                      className="text-[11px] font-mono text-slate-400 hover:text-slate-300 flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700"
+                      title="Configure Calendly Link"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      <span>Custom Link</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Preferred Date */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-cinzel uppercase tracking-wider text-gold-400 font-bold">
-                      Preferred Date *
+                {/* Optional Custom Calendly URL Editor */}
+                {isEditingCalendlyUrl && (
+                  <div className="p-3.5 rounded-xl bg-obsidian-900 border border-slate-700 space-y-2 text-xs">
+                    <label className="text-[11px] font-mono text-slate-300 block">
+                      Calendly Event URL (with Zoom Integration active):
                     </label>
-                    <input
-                      type="date"
-                      required
-                      min={new Date().toISOString().split('T')[0]}
-                      value={formData.preferredDate}
-                      onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-gold-500/40 text-xs text-slate-100 focus:border-gold-400 outline-none"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={calendlyUrl}
+                        onChange={(e) => setCalendlyUrl(e.target.value)}
+                        placeholder="https://calendly.com/your-username/30min"
+                        className="flex-1 px-3 py-2 rounded-lg bg-obsidian-950 border border-slate-700 text-slate-200 text-xs outline-none focus:border-gold-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingCalendlyUrl(false)}
+                        className="px-3 py-2 rounded-lg bg-gold-500/20 text-gold-300 text-xs font-mono font-semibold"
+                      >
+                        Apply
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  {/* Preferred Time */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
-                      Preferred Time Slot (30 Mins) *
-                    </label>
-                    <select
-                      value={formData.preferredTime}
-                      onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 focus:border-gold-400 outline-none"
-                    >
-                      <option value="10:00 AM">10:00 AM (Morning Slot)</option>
-                      <option value="02:00 PM">02:00 PM (Afternoon Slot)</option>
-                      <option value="06:00 PM">06:00 PM (Evening Slot)</option>
-                      <option value="08:30 PM">08:30 PM (Night Slot)</option>
-                    </select>
+                {/* Zoom Auto-Generation Status Banner */}
+                <div className={`p-4 rounded-2xl border transition-all ${
+                  calendlyScheduled 
+                    ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200' 
+                    : 'bg-obsidian-900/90 border-cyan-500/30 text-slate-300'
+                }`}>
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      calendlyScheduled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'
+                    }`}>
+                      <Video className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-cinzel text-xs font-bold uppercase tracking-wider text-slate-100">
+                          {calendlyScheduled ? '✓ Zoom Slot Scheduled!' : 'Direct Zoom Integration Active'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
+                          AUTO-ZOOM
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {calendlyScheduled ? (
+                          <>
+                            Your slot has been reserved. Your private Zoom meeting link, passcode, and calendar event have been generated by Calendly and emailed to <strong>{formData.email || 'your email'}</strong>. Click below to complete your checkout.
+                          </>
+                        ) : (
+                          <>
+                            Select your date and time directly in the calendar below. Calendly will automatically schedule the session, create a secure Zoom room, and email you the invitation.
+                          </>
+                        )}
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                {/* Embedded Calendly Inline Scheduler */}
+                <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-[#0b0e14] shadow-2xl min-h-[640px]">
+                  <iframe
+                    src={embeddedCalendlyUrl}
+                    width="100%"
+                    height="660"
+                    frameBorder="0"
+                    title="Tarot X — Schedule Live Zoom Reading via Calendly"
+                    className="w-full bg-[#0b0e14]"
+                  />
                 </div>
 
                 {/* Topics / Notes */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
-                    Topics or Questions for the Call (Optional)
+                    Topics or Questions for the Zoom Call (Optional)
                   </label>
                   <div className="relative">
                     <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -426,11 +538,12 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                       rows={3}
                       value={formData.zoomNotes}
                       onChange={(e) => setFormData({ ...formData, zoomNotes: e.target.value })}
-                      placeholder="Share what situation or decisions you would like to explore together during our 30-minute live call..."
+                      placeholder="Share what situation, decisions, or crossroads you would like to explore together during our 30-minute live call..."
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
                     />
                   </div>
                 </div>
+
               </div>
             )}
 
@@ -447,7 +560,9 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                     ? 'Connecting to Secure Gateway...' 
                     : isOffline
                       ? `Pay ₹99 & Order Offline Report`
-                      : `Pay ₹999 & Confirm 30-Min Zoom Session`}
+                      : calendlyScheduled
+                        ? `Pay ₹999 & Confirm Scheduled Zoom Session`
+                        : `Pay ₹999 & Confirm 30-Min Zoom Session`}
                 </span>
               </button>
 
@@ -480,7 +595,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
 
             <div className="space-y-1">
               <span className="text-xs font-cinzel uppercase tracking-widest text-gold-400 font-bold">
-                ✦ Payment Verified & Order Confirmed ✦
+                ✦ Payment Verified & Session Booked ✦
               </span>
               <h3 className="font-cinzel text-xl font-bold text-slate-100">
                 Thank You, {confirmed.name}
@@ -492,7 +607,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                   </>
                 ) : (
                   <>
-                    Your 30-minute live Zoom session is booked! A private meeting link and calendar access have been dispatched to <strong>{confirmed.email}</strong>.
+                    Your 30-minute live Zoom session is confirmed! Calendly has automatically generated your private meeting link and dispatched a calendar invitation to <strong>{confirmed.email}</strong>.
                   </>
                 )}
               </p>
@@ -508,11 +623,18 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 <span className="font-semibold text-slate-200">{confirmed.service_title}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-slate-400">Platform:</span>
+                <span className="font-semibold text-cyan-300 flex items-center space-x-1">
+                  <Video className="w-3 h-3 text-cyan-400" />
+                  <span>Zoom Video (via Calendly)</span>
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-400">Delivery / Schedule:</span>
                 <span className="font-semibold text-slate-200">
                   {confirmed.isOffline 
                     ? 'Email Delivery within 24–48 hrs' 
-                    : `${confirmed.preferred_date} at ${confirmed.preferred_time}`}
+                    : (confirmed.preferred_date ? `${confirmed.preferred_date} ${confirmed.preferred_time || ''}` : 'Scheduled via Calendly')}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -534,4 +656,3 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     </section>
   );
 }
-

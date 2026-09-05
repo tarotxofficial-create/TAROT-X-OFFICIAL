@@ -11,7 +11,7 @@ export default function FAQ() {
     },
     {
       q: 'How does the ₹999 1-to-1 Live Zoom Reading work?',
-      a: 'You select a preferred date and time slot for a dedicated 30-minute private video call on Zoom. You will receive a calendar invite and private Zoom link via email. During the session, we explore your spreads interactively, allowing you to ask real-time questions and receive instant intuitive clarity.'
+      a: 'You select your preferred date and time slot via our integrated Calendly scheduler right in the booking form. Calendly automatically generates your private Zoom meeting link, passcode, and calendar invite. During the 30-minute video session, we explore your patterns interactively with real-time card draws.'
     },
     {
       q: 'What details do I need to provide for the ₹99 Offline Report?',
