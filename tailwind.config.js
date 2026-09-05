@@ -10,6 +10,13 @@ export default {
       colors: {
         void: '#050508',
         'primary-void': '#050508',
+        obsidian: {
+          950: '#050508',
+          900: '#0a0d14',
+          850: '#0f1420',
+          800: '#141b2d',
+          700: '#1e293b',
+        },
         steel: {
           900: '#0b0e14',
           800: '#111622',
@@ -17,6 +24,16 @@ export default {
           light: '#2d3748',
         },
         'monolith-steel': '#1F2833',
+        gold: {
+          100: '#fdf8ea',
+          200: '#f9ecc8',
+          300: '#f4de9e',
+          400: '#ecc86b',
+          500: '#e5b238',
+          600: '#c69222',
+          700: '#9d6d16',
+          glow: '#d4af37',
+        },
         cyan: {
           vector: '#66FCF1',
           glow: '#45A29E',
@@ -32,9 +49,10 @@ export default {
         smoke: '#C5C6C7',
       },
       fontFamily: {
+        cinzel: ['Cinzel', 'serif'],
+        'cinzel-decorative': ['"Cinzel Decorative"', 'serif'],
         mono: ['"Space Mono"', '"JetBrains Mono"', 'ui-monospace', 'monospace'],
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
-        cinzel: ['Cinzel', 'serif'],
       },
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',

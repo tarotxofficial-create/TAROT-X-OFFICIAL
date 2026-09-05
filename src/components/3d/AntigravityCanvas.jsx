@@ -301,19 +301,16 @@ export default function AntigravityCanvas({ activeZone = 0, scrollProgress = 0, 
       // Spotlight subtle organic flicker
       spotlight.intensity = 1.8 + Math.sin(elapsed * 12) * 0.15 + (Math.random() - 0.5) * 0.08;
 
-      // Smooth Camera Z-Depth interpolation based on scroll or active zone
-      // Target Z coordinates for zones:
-      // Zone 0 (Horizon): Z = 80
-      // Zone 1 (Deconstruct): Z = -900
-      // Zone 2 (Manifesto): Z = -2200
-      // Zone 3 (Terminals): Z = -3700
-      // Zone 4 (Execution): Z = -5100
-      const zoneDepths = [80, -900, -2200, -3700, -5100];
-      const targetZ = zoneDepths[activeZone] !== undefined ? zoneDepths[activeZone] : 80;
+      // Smooth Camera Z-Depth interpolation based on continuous page scroll
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollRatio = docHeight > 0 ? Math.min(Math.max(window.scrollY / docHeight, 0), 1) : 0;
+      
+      // Target Z traverses smoothly from +80 down to -5200 as the user scrolls the page
+      const targetZ = 80 - scrollRatio * 5200;
 
-      camera.position.z += (targetZ - camera.position.z) * 0.06;
-      camera.position.x += (mouseRef.current.x * 12 - camera.position.x) * 0.05;
-      camera.position.y += (mouseRef.current.y * 10 - camera.position.y) * 0.05;
+      camera.position.z += (targetZ - camera.position.z) * 0.05;
+      camera.position.x += (mouseRef.current.x * 14 - camera.position.x) * 0.05;
+      camera.position.y += (mouseRef.current.y * 12 - camera.position.y) * 0.05;
       camera.lookAt(0, 0, camera.position.z - 150);
 
       // Rotate Holographic concentric rings
