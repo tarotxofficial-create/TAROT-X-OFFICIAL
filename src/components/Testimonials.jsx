@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Star, CheckCircle2 } from 'lucide-react';
 
 const REVIEWS = [
   {
@@ -247,34 +247,17 @@ export default function Testimonials() {
 
   return (
     <section id="reviews" className="py-24 border-t border-slate-800/80 scroll-mt-20 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 mb-12">
-        
-        {/* Section Header */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest px-3 py-1 rounded-full bg-gold-400/10 border border-gold-400/20">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Documented Client Accounts</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center">
+        <div className="inline-flex flex-col items-center justify-center space-y-1.5">
+          <div className="flex items-center space-x-1 text-gold-400">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-3.5 h-3.5 fill-gold-400 text-gold-400" />
+            ))}
           </div>
-          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text tracking-wide">
-            Words From The Pattern Sessions
+          <h2 className="font-cinzel text-2xl sm:text-3xl font-bold gold-gradient-text tracking-wider">
+            1000+ Happy Clients
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Real reflections from skeptics, decision-makers, and seekers across India who experienced the direct, rational pattern-reading methodology of X.
-          </p>
-
-          {/* Quick Metrics Bar */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-slate-400">
-            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800">
-              <Star className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />
-              <span>4.8 / 5.0 Rating (32 Accounts)</span>
-            </div>
-            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-              <span>100% Pattern Clarity & Zero Superstition</span>
-            </div>
-          </div>
         </div>
-
       </div>
 
       {/* Marquee Section with Fade Masks */}
