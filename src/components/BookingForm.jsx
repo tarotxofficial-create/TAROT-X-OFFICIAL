@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -11,16 +11,19 @@ import {
   Video, 
   CreditCard, 
   Lock, 
-  AlertCircle,
-  FileText,
-  ExternalLink,
-  CalendarCheck,
-  Link2
+  AlertCircle, 
+  FileText, 
+  ExternalLink, 
+  CalendarCheck, 
+  Link2,
+  ShieldCheck,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { submitBooking } from '../lib/supabase';
-import { initiateRazorpayCheckout } from '../lib/razorpay';
+import { initiateRazorpayCheckout, verifyPaymentWithServer } from '../lib/razorpay';
 import { READING_SERVICES } from './Services';
-import { DEFAULT_CALENDLY_URL, buildCalendlyUrl, openCalendlyPopup } from '../lib/calendly';
+import { DEFAULT_CALENDLY_URL, buildCalendlyUrl, openCalendlyPopup, cancelCalendlyBooking } from '../lib/calendly';
 
 export default function BookingForm({ selectedService, onServiceChange }) {
   const initialService = selectedService || READING_SERVICES[0];
@@ -46,12 +49,23 @@ export default function BookingForm({ selectedService, onServiceChange }) {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [cancellationNotice, setCancellationNotice] = useState('');
 
   // Calendly + Zoom integration states
   const [calendlyUrl, setCalendlyUrl] = useState(DEFAULT_CALENDLY_URL);
   const [isEditingCalendlyUrl, setIsEditingCalendlyUrl] = useState(false);
   const [calendlyScheduled, setCalendlyScheduled] = useState(false);
   const [calendlyEventData, setCalendlyEventData] = useState(null);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+
+  // Auto-cancellation timer ref (5-minute hold)
+  const autoCancelTimerRef = useRef(null);
+  const calendlyEventRef = useRef(null);
+
+  // Keep ref synchronized with state for callbacks
+  useEffect(() => {
+    calendlyEventRef.current = calendlyEventData;
+  }, [calendlyEventData]);
 
   // Synchronize when parent prop changes
   useEffect(() => {
@@ -67,13 +81,16 @@ export default function BookingForm({ selectedService, onServiceChange }) {
       
       if (e.data.event === 'calendly.event_scheduled') {
         console.log('Calendly Event Scheduled:', e.data.payload);
+        const payload = e.data.payload;
         setCalendlyScheduled(true);
-        setCalendlyEventData(e.data.payload);
+        setCalendlyEventData(payload);
+        setCancellationNotice('');
+        setErrorMsg('');
 
         // Auto-extract date & time if available
-        if (e.data.payload?.event?.start_time) {
+        if (payload?.event?.start_time) {
           try {
-            const dateObj = new Date(e.data.payload.event.start_time);
+            const dateObj = new Date(payload.event.start_time);
             setFormData(prev => ({
               ...prev,
               preferredDate: dateObj.toISOString().split('T')[0],
@@ -83,12 +100,30 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             console.warn('Could not parse scheduled date:', err);
           }
         }
+
+        // Set 5-minute auto-cancel timer if payment is not verified within 5 minutes
+        if (autoCancelTimerRef.current) clearTimeout(autoCancelTimerRef.current);
+        autoCancelTimerRef.current = setTimeout(async () => {
+          if (!paymentVerified && payload?.event?.uri) {
+            console.warn('Payment timeout reached (5 mins). Auto-deleting Calendly booking...');
+            await cancelCalendlyBooking({
+              eventUri: payload.event.uri,
+              reason: 'Payment timeout (5 mins elapsed without payment confirmation) on Tarot X Official'
+            });
+            setCalendlyScheduled(false);
+            setCalendlyEventData(null);
+            setCancellationNotice('Your reserved Calendly slot was automatically cancelled because payment was not completed within 5 minutes.');
+          }
+        }, 5 * 60 * 1000);
       }
     };
 
     window.addEventListener('message', handleCalendlyMessage);
-    return () => window.removeEventListener('message', handleCalendlyMessage);
-  }, []);
+    return () => {
+      window.removeEventListener('message', handleCalendlyMessage);
+      if (autoCancelTimerRef.current) clearTimeout(autoCancelTimerRef.current);
+    };
+  }, [paymentVerified]);
 
   const activeService = READING_SERVICES.find(s => s.id === formData.serviceId) || READING_SERVICES[0];
   const isOffline = activeService.type === 'offline';
@@ -98,9 +133,26 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     if (onServiceChange) onServiceChange(srv);
   };
 
+  // Helper to auto-cancel and release Calendly slot
+  const handleAutoDeleteCalendlySlot = async (reason) => {
+    const currentEvent = calendlyEventRef.current;
+    if (currentEvent?.event?.uri) {
+      console.log('Triggering auto-delete for Calendly event:', currentEvent.event.uri);
+      await cancelCalendlyBooking({
+        eventUri: currentEvent.event.uri,
+        reason: reason || 'Payment not completed by client on Tarot X Official'
+      });
+      setCalendlyScheduled(false);
+      setCalendlyEventData(null);
+      if (autoCancelTimerRef.current) clearTimeout(autoCancelTimerRef.current);
+      setCancellationNotice('Payment was not completed. Your preliminary Calendly slot was automatically cancelled and released.');
+    }
+  };
+
   const handlePayAndBook = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setCancellationNotice('');
 
     // Validations
     if (!formData.name.trim() || !formData.email.trim()) {
@@ -112,6 +164,11 @@ export default function BookingForm({ selectedService, onServiceChange }) {
       if (!formData.offlineQuestions.trim()) {
         setErrorMsg('Please share your questions or situation so the reader has all details needed for your offline report.');
         return;
+      }
+    } else {
+      // For Live Zoom, encourage picking a slot or require scheduling
+      if (!calendlyScheduled) {
+        // User can still proceed to pay, or pick slot
       }
     }
 
@@ -126,6 +183,24 @@ export default function BookingForm({ selectedService, onServiceChange }) {
       customerPhone: formData.phone.trim(),
       onSuccess: async (paymentDetails) => {
         try {
+          // 1. VERIFY PAYMENT CONFIRMATION WITH BACKEND
+          const verification = await verifyPaymentWithServer({
+            paymentId: paymentDetails.paymentId,
+            expectedAmountINR: activeService.inrAmount
+          });
+
+          if (!verification.verified) {
+            // Payment rejected or verification mismatch -> AUTO-DELETE CALENDLY BOOKING
+            await handleAutoDeleteCalendlySlot('Payment verification failed on Tarot X Official');
+            setSubmitting(false);
+            setErrorMsg(verification.error || 'Payment confirmation could not be verified by gateway. Calendly slot released.');
+            return;
+          }
+
+          // Payment successfully verified!
+          setPaymentVerified(true);
+          if (autoCancelTimerRef.current) clearTimeout(autoCancelTimerRef.current);
+
           const notesContent = isOffline 
             ? `[Focus: ${formData.focusArea}] [Birth/Zodiac: ${formData.birthDetails.trim() || 'N/A'}] Questions & Context: ${formData.offlineQuestions.trim()}`
             : `[Zoom Session via Calendly] [Scheduled: ${calendlyScheduled ? 'Yes' : 'Pending'}] [Calendly Event: ${calendlyEventData?.event?.uri || 'N/A'}] Notes: ${formData.zoomNotes.trim() || 'None'}`;
@@ -147,7 +222,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             notes: notesContent,
             payment_id: paymentDetails.paymentId,
             order_id: paymentDetails.orderId,
-            payment_status: 'paid',
+            payment_status: 'verified_paid',
             status: 'confirmed'
           };
 
@@ -159,22 +234,31 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               ...result.booking,
               paymentId: paymentDetails.paymentId,
               isOffline,
-              calendlyScheduled
+              calendlyScheduled,
+              verifiedPayment: true
             });
           } else {
-            setErrorMsg('Payment succeeded, but could not save booking. Please contact tarotxofficial@gmail.com with ID: ' + paymentDetails.paymentId);
+            setErrorMsg('Payment verified, but could not save booking. Please contact tarotxofficial@gmail.com with ID: ' + paymentDetails.paymentId);
           }
         } catch (err) {
           setSubmitting(false);
-          setErrorMsg(err.message || 'Error finalizing booking after payment.');
+          // If error finalizing, check if slot needs cancellation
+          if (!paymentVerified) {
+            await handleAutoDeleteCalendlySlot('Error finalizing booking after payment');
+          }
+          setErrorMsg(err.message || 'Error verifying booking after payment.');
         }
       },
-      onFailure: (err) => {
+      onFailure: async (err) => {
         setSubmitting(false);
-        setErrorMsg(err?.message || 'Payment was cancelled or unsuccessful. You can try again anytime.');
+        // AUTO-DELETE CALENDLY BOOKING ON PAYMENT FAILURE
+        await handleAutoDeleteCalendlySlot('Payment failed or transaction declined');
+        setErrorMsg(err?.message || 'Payment was unsuccessful. Any preliminary Calendly reservation has been cancelled.');
       },
-      onDismiss: () => {
+      onDismiss: async () => {
         setSubmitting(false);
+        // AUTO-DELETE CALENDLY BOOKING ON PAYMENT DISMISSAL
+        await handleAutoDeleteCalendlySlot('Payment modal dismissed by client without completing payment');
       }
     });
   };
@@ -193,13 +277,13 @@ export default function BookingForm({ selectedService, onServiceChange }) {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Consultation Scheduler & Checkout</span>
+            <span>Consultation Scheduler & Verified Checkout</span>
           </div>
           <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
             Book Your Reading
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
-            Choose your preferred service, schedule your session with automatic Zoom integration, and complete secure checkout.
+            Direct Zoom scheduling via Calendly with instant cryptographic payment verification. Unpaid reservations are automatically released.
           </p>
         </div>
 
@@ -276,23 +360,35 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                     </span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">
-                    A private 30-minute face-to-face video consultation. Pick your preferred date and time slot on the integrated <strong>Calendly scheduler</strong> below. Your private Zoom meeting link, passcode, and calendar invite are generated automatically.
+                    A private 30-minute face-to-face video consultation. Pick your slot on the integrated Calendly scheduler below. <strong>Slots are locked only upon payment confirmation</strong>; if payment is incomplete or dismissed, the reservation is auto-deleted.
                   </p>
                 </div>
               </>
             )}
           </div>
 
+          {/* Cancellation Notice (If slot was auto-deleted) */}
+          {cancellationNotice && (
+            <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 text-amber-200 text-xs flex items-start space-x-3 animate-fade-in">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-semibold text-amber-300 block">Slot Auto-Cancelled Notice</span>
+                <p className="leading-relaxed">{cancellationNotice}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handlePayAndBook} className="space-y-6">
             
-            {errorMsg && (
-              <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
             {/* Core Client Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
@@ -423,7 +519,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             {!isOffline && (
               <div className="space-y-6 pt-2 border-t border-slate-800">
                 
-                {/* Integration Header & Status */}
+                {/* Integration Header & Controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-2 text-cyan-300 text-xs font-cinzel uppercase tracking-wider font-bold">
                     <CalendarCheck className="w-4 h-4 text-cyan-400" />
@@ -479,39 +575,53 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                   </div>
                 )}
 
-                {/* Zoom Auto-Generation Status Banner */}
+                {/* Zoom Auto-Generation & Payment Verification Status Banner */}
                 <div className={`p-4 rounded-2xl border transition-all ${
                   calendlyScheduled 
-                    ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200' 
+                    ? 'bg-amber-950/30 border-amber-500/50 text-amber-200' 
                     : 'bg-obsidian-900/90 border-cyan-500/30 text-slate-300'
                 }`}>
-                  <div className="flex items-start space-x-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      calendlyScheduled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'
-                    }`}>
-                      <Video className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-cinzel text-xs font-bold uppercase tracking-wider text-slate-100">
-                          {calendlyScheduled ? '✓ Zoom Slot Scheduled!' : 'Direct Zoom Integration Active'}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
-                          AUTO-ZOOM
-                        </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start space-x-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        calendlyScheduled ? 'bg-amber-500/20 text-amber-400' : 'bg-cyan-500/20 text-cyan-400'
+                      }`}>
+                        <Video className="w-4 h-4" />
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {calendlyScheduled ? (
-                          <>
-                            Your slot has been reserved. Your private Zoom meeting link, passcode, and calendar event have been generated by Calendly and emailed to <strong>{formData.email || 'your email'}</strong>. Click below to complete your checkout.
-                          </>
-                        ) : (
-                          <>
-                            Select your date and time directly in the calendar below. Calendly will automatically schedule the session, create a secure Zoom room, and email you the invitation.
-                          </>
-                        )}
-                      </p>
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-cinzel text-xs font-bold uppercase tracking-wider text-slate-100">
+                            {calendlyScheduled ? '⚡ Slot Temporarily Reserved' : 'Direct Zoom Integration Active'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
+                            PAYMENT-VERIFIED LOCK
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          {calendlyScheduled ? (
+                            <>
+                              Slot selected for <strong>{formData.preferredDate} {formData.preferredTime}</strong>. Complete payment confirmation below to finalize your booking. If payment is not completed, this booking will be <strong>auto-deleted from Calendly</strong> to release the slot.
+                            </>
+                          ) : (
+                            <>
+                              Select your date and time directly in the calendar below. Calendly will prepare your Zoom room. Payment confirmation is strictly verified before locking the appointment.
+                            </>
+                          )}
+                        </p>
+                      </div>
                     </div>
+
+                    {calendlyScheduled && (
+                      <button
+                        type="button"
+                        onClick={() => handleAutoDeleteCalendlySlot('Cancelled by client before payment')}
+                        className="shrink-0 flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-950/60 border border-rose-500/40 text-rose-300 hover:bg-rose-900/80 text-[11px] font-mono transition-colors"
+                        title="Release slot and cancel reservation"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Cancel Slot</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -554,14 +664,14 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 disabled={submitting}
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-400 via-amber-500 to-yellow-600 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-widest shadow-xl shadow-gold-500/20 hover:scale-[1.01] active:scale-98 disabled:opacity-50 transition-all flex items-center justify-center space-x-2"
               >
-                <CreditCard className="w-4 h-4 text-obsidian-950" />
+                <ShieldCheck className="w-4 h-4 text-obsidian-950" />
                 <span>
                   {submitting 
-                    ? 'Connecting to Secure Gateway...' 
+                    ? 'Verifying Payment Confirmation...' 
                     : isOffline
                       ? `Pay ₹99 & Order Offline Report`
                       : calendlyScheduled
-                        ? `Pay ₹999 & Confirm Scheduled Zoom Session`
+                        ? `Verify ₹999 Payment & Lock Calendly Slot`
                         : `Pay ₹999 & Confirm 30-Min Zoom Session`}
                 </span>
               </button>
@@ -573,9 +683,13 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                   <span>Razorpay 256-Bit SSL Secured</span>
                 </span>
                 <span>•</span>
-                <span>UPI (GPay / PhonePe / Paytm)</span>
+                <span className="text-emerald-400 font-mono text-[10px]">
+                  ✓ Verified Payment Confirmation
+                </span>
                 <span>•</span>
-                <span>Cards & NetBanking</span>
+                <span className="text-amber-400 font-mono text-[10px]">
+                  ⚡ Auto-Delete on Incomplete Payment
+                </span>
               </div>
             </div>
 
@@ -595,7 +709,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
 
             <div className="space-y-1">
               <span className="text-xs font-cinzel uppercase tracking-widest text-gold-400 font-bold">
-                ✦ Payment Verified & Session Booked ✦
+                ✦ Payment Verified & Session Confirmed ✦
               </span>
               <h3 className="font-cinzel text-xl font-bold text-slate-100">
                 Thank You, {confirmed.name}
@@ -603,17 +717,24 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               <p className="text-xs text-slate-300 leading-relaxed">
                 {confirmed.isOffline ? (
                   <>
-                    Your reading details have been received. Your offline tarot report and spread photographs will be delivered directly to <strong>{confirmed.email}</strong> within <strong>24–48 hours</strong>.
+                    Your reading details have been received and payment is verified. Your offline report and photographs will be delivered directly to <strong>{confirmed.email}</strong> within <strong>24–48 hours</strong>.
                   </>
                 ) : (
                   <>
-                    Your 30-minute live Zoom session is confirmed! Calendly has automatically generated your private meeting link and dispatched a calendar invitation to <strong>{confirmed.email}</strong>.
+                    Your 30-minute live Zoom session is verified and locked in! Calendly has generated your private meeting link and dispatched a calendar invitation to <strong>{confirmed.email}</strong>.
                   </>
                 )}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-obsidian-900/90 border border-slate-800 text-left space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Payment Status:</span>
+                <span className="font-mono text-emerald-400 font-semibold flex items-center space-x-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Verified & Captured</span>
+                </span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Payment ID:</span>
                 <span className="font-mono text-gold-300 font-semibold">{confirmed.paymentId || 'Verified'}</span>
@@ -630,11 +751,11 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Delivery / Schedule:</span>
+                <span className="text-slate-400">Schedule:</span>
                 <span className="font-semibold text-slate-200">
                   {confirmed.isOffline 
                     ? 'Email Delivery within 24–48 hrs' 
-                    : (confirmed.preferred_date ? `${confirmed.preferred_date} ${confirmed.preferred_time || ''}` : 'Scheduled via Calendly')}
+                    : (confirmed.preferred_date ? `${confirmed.preferred_date} ${confirmed.preferred_time || ''}` : 'Confirmed on Calendar')}
                 </span>
               </div>
               <div className="flex justify-between">

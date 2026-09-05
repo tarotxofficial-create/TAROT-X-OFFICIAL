@@ -76,3 +76,28 @@ export async function openCalendlyPopup({ url = DEFAULT_CALENDLY_URL, prefill = 
     window.open(buildCalendlyUrl(url, prefill), '_blank');
   }
 }
+
+/**
+ * Auto-delete / cancel a Calendly booking if payment fails or is not completed
+ */
+export async function cancelCalendlyBooking({ eventUri, eventUuid, reason = 'Payment not completed on Tarot X Official' }) {
+  try {
+    const response = await fetch('/api/cancel-calendly', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        eventUri,
+        eventUuid,
+        reason
+      })
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.warn('Could not auto-cancel Calendly booking via API:', error);
+    return { success: false, error: error.message };
+  }
+}
+
