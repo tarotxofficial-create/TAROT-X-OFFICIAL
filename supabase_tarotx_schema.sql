@@ -1,69 +1,44 @@
--- TAROT X OFFICIAL — Supabase Database Schema
+-- TAROT X OFFICIAL — Portfolio & Reading Bookings Database Schema
 -- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql)
 
 -- 1. Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. Tarot Readings Archive Table
-CREATE TABLE IF NOT EXISTS public.tarot_readings (
+-- 2. Reading Bookings Table
+CREATE TABLE IF NOT EXISTS public.tarot_bookings (
   id TEXT PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  spread_id TEXT NOT NULL,
-  spread_name TEXT NOT NULL,
-  question TEXT,
-  cards JSONB NOT NULL DEFAULT '[]'::jsonb,
-  notes TEXT,
-  is_favorite BOOLEAN DEFAULT false
-);
-
--- 3. Spiritual Consultations Table
-CREATE TABLE IF NOT EXISTS public.tarot_consultations (
-  id TEXT PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  tier_id TEXT NOT NULL,
-  tier_title TEXT NOT NULL,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
-  date TEXT NOT NULL,
-  time_slot TEXT NOT NULL,
-  timezone TEXT DEFAULT 'UTC',
+  phone TEXT,
+  service_title TEXT NOT NULL,
   price TEXT,
+  format TEXT DEFAULT 'Live Zoom Video',
+  preferred_date TEXT NOT NULL,
+  preferred_time TEXT NOT NULL,
+  timezone TEXT DEFAULT 'UTC',
   notes TEXT,
-  status TEXT DEFAULT 'confirmed'
+  status TEXT DEFAULT 'pending_confirmation'
 );
 
--- 4. Celestial Newsletter Subscribers Table
-CREATE TABLE IF NOT EXISTS public.tarot_subscribers (
+-- 3. Inquiries & Contact Messages Table
+CREATE TABLE IF NOT EXISTS public.tarot_inquiries (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  source TEXT DEFAULT 'web_footer'
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  message TEXT NOT NULL
 );
 
--- 5. Enable Row Level Security (RLS)
-ALTER TABLE public.tarot_readings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.tarot_consultations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.tarot_subscribers ENABLE ROW LEVEL SECURITY;
+-- 4. Enable Row Level Security (RLS)
+ALTER TABLE public.tarot_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tarot_inquiries ENABLE ROW LEVEL SECURITY;
 
--- 6. Public Policies for Anonymous & Authenticated Access
-CREATE POLICY "Allow public insert to tarot_readings"
-ON public.tarot_readings FOR INSERT
+-- 5. Policies: Allow clients to submit bookings & inquiries
+CREATE POLICY "Allow public insert to tarot_bookings"
+ON public.tarot_bookings FOR INSERT
 WITH CHECK (true);
 
-CREATE POLICY "Allow public read of own tarot_readings"
-ON public.tarot_readings FOR SELECT
-USING (true);
-
-CREATE POLICY "Allow public delete of tarot_readings"
-ON public.tarot_readings FOR DELETE
-USING (true);
-
-CREATE POLICY "Allow public insert to tarot_consultations"
-ON public.tarot_consultations FOR INSERT
-WITH CHECK (true);
-
-CREATE POLICY "Allow public insert to tarot_subscribers"
-ON public.tarot_subscribers FOR INSERT
+CREATE POLICY "Allow public insert to tarot_inquiries"
+ON public.tarot_inquiries FOR INSERT
 WITH CHECK (true);
