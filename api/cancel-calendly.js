@@ -33,10 +33,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing eventUri or eventUuid in request.' });
     }
 
+    const CALENDLY_FALLBACK_TOKEN = 
+      'eyJraWQiOiIxY2UxZTEzNjE3ZGNmNzY2YjNjZWJjY2Y4ZGM1YmFmYThhNjVlNjg0MDIzZjdjMzJiZTgzNDliMjM4MDEzNWI0IiwidHlwIjoiUEFUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJodHRwczovL2F1dGguY2FsZW5kbHkuY29tIiwiaWF0IjoxNzg4NjI2OTMxLCJqdGkiOiI1MDQ5ODc3Mi03OTQ3LTQzZWYtYTgyZS0zODVkMmFiZjJhNDkiLCJ1c2VyX3V1aWQiOiI1Mjk4ZGRkNi00ODk2LTQzNGEtOTZkNS1hNWI2NTExMTUzYjYiLCJzY29wZSI6ImF2YWlsYWJpbGl0eTpyZWFkIGF2YWlsYWJpbGl0eTp3cml0ZSBldmVudF90eXBlczpyZWFkIGV2ZW50X3R5cGVzOndyaXRlIGxvY2F0aW9uczpyZWFkIHJvdXRpbmdfZm9ybXM6cmVhZCBzaGFyZXM6d3JpdGUgc2NoZWR1bGVkX2V2ZW50czpyZWFkIHNjaGVkdWxlZF9ldmVudHM6d3JpdGUgc2NoZWR1bGluZ19saW5rczp3cml0ZSBncm91cHM6cmVhZCBvcmdhbml6YXRpb25zOnJlYWQgb3JnYW5pemF0aW9uczp3cml0ZSB1c2VyczpyZWFkIGNvbnRhY3RzOnJlYWQgY29udGFjdHM6d3JpdGUgbWVldGluZ19yZWNhcHM6cmVhZCBtZWV0aW5nX3JlY2Fwczp3cml0ZSBhY3Rpdml0eV9sb2c6cmVhZCBkYXRhX2NvbXBsaWFuY2U6d3JpdGUgb3V0Z29pbmdfY29tbXVuaWNhdGlvbnM6cmVhZCB3ZWJob29rczpyZWFkIHdlYmhvb2tzOndyaXRlIn0.RXaonCsAZ-dpPLMFteOsSIzVEYievLh89HX1hbpu_Ct7-kWMeAGqEp07dpQ6gAcFwtOkKadPza1gLbeSNBK4Lw';
+
     const calendlyToken = 
       process.env.CALENDLY_API_TOKEN || 
       process.env.VITE_CALENDLY_API_TOKEN || 
-      '';
+      CALENDLY_FALLBACK_TOKEN;
 
     const cancelReason = reason || 'Payment not completed by seeker on Tarot X Official';
 
