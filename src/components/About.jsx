@@ -1,84 +1,117 @@
 import React from 'react';
-import { Sparkles, Compass, ShieldCheck, Heart, Eye, CheckCircle2 } from 'lucide-react';
+import { Shield, Eye, Brain, Compass, Terminal, Quote, ArrowRight } from 'lucide-react';
 
 export default function About() {
-  const principles = [
+  const quotes = [
     {
-      title: 'Empowerment Over Fatalism',
-      description: 'The cards do not lock in an unchangeable fate; they illuminate existing energies, unconscious blind spots, and empower you to choose the highest path.'
+      text: "I'm not here to give you what you want to hear. I'm here to show you what's actually there.",
+      context: "On radical clarity over comforting deception"
     },
     {
-      title: 'Sacred Confidentiality',
-      description: 'Your life, relationships, and queries are treated with absolute discretion. Every session takes place in a safe, compassionate, non-judgmental container.'
+      text: "You're not cursed. You're just repeating patterns you haven't noticed yet.",
+      context: "On breaking unconscious behavioral loops"
     },
     {
-      title: 'Actionable Practical Guidance',
-      description: 'Beyond esoteric insights, every reading concludes with grounded, actionable steps you can integrate immediately into your daily reality.'
+      text: "I don't predict your future. I highlight the probabilities based on the patterns I see. What you do with that is still your choice.",
+      context: "On preserving client agency and autonomy"
+    },
+    {
+      text: "Same cards. Different people. Different stories. Same patterns.",
+      context: "On archetypal human commonalities"
     }
   ];
 
+  const parameters = [
+    { label: 'IDENTITY', value: 'X, Anonymous Reader' },
+    { label: 'IDEOLOGY', value: 'Atheist. Rationalist. Skeptical.' },
+    { label: 'CORE TOOL', value: 'Pattern Recognition & Tarot Symbolism' },
+    { label: 'APPEARANCE', value: 'Hooded. Bandana Mask. No Persona.' },
+    { label: 'BOUNDARIES', value: 'No Prophecy. No Fear-Selling. No Dependency.' },
+    { label: 'OUTPUT', value: 'Perspective & Probability Mapping' }
+  ];
+
   return (
-    <section id="about" className="py-20 border-t border-slate-800/80 scroll-mt-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section id="about" className="py-24 border-t border-brass/20 bg-void scroll-mt-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         {/* Section Heading */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>The Reader & Philosophy</span>
+        <div className="space-y-4 max-w-2xl">
+          <div className="flex items-center space-x-2 text-brass text-[11px] font-mono uppercase tracking-[0.25em]">
+            <Terminal className="w-3.5 h-3.5" />
+            <span>Profile // Philosophy & Boundaries</span>
           </div>
-          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
-            About Tarot X Official
+          <h2 className="font-cinzel text-3xl sm:text-5xl font-bold text-bone leading-tight">
+            Who is X? <br />
+            <span className="brass-gradient-text">A mirror, not a miracle.</span>
           </h2>
+          <p className="text-xs sm:text-sm text-smoke leading-relaxed font-sans">
+            X is a tarot reader, but not a spiritual guide. Not a guru. Not a believer. Not a mystic. He is an atheist and a rationalist who uses tarot as a tool — not for divine messages, but as a system of pattern recognition.
+          </p>
         </div>
 
-        {/* Bio Narrative & Image/Quote Card */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        {/* Philosophy & Dossier Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Reader Profile Visual Box */}
-          <div className="md:col-span-5 flex justify-center">
-            <div className="relative w-72 h-96 rounded-3xl overflow-hidden border-2 border-gold-500/40 p-2 bg-obsidian-900 shadow-2xl shadow-gold-500/10">
-              <img
-                src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80"
-                alt="Tarot X Intuitive Reader"
-                className="w-full h-full object-cover rounded-2xl brightness-90 contrast-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-obsidian-950/20 to-transparent flex flex-col justify-end p-5">
-                <span className="font-cinzel text-base font-bold text-gold-300">Intuitive Tarot Practitioner</span>
-                <span className="text-xs text-slate-300">Over 7+ Years of Sacred Card Study</span>
-              </div>
+          {/* Left Column: Dossier Parameters Table */}
+          <div className="lg:col-span-5 archive-panel rounded-sm p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-brass/20 pb-4">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brass">
+                OPERATIONAL PARAMETERS
+              </span>
+              <span className="text-[9px] font-mono text-smoke">REF: X-ARCHIVE</span>
             </div>
-          </div>
 
-          {/* Bio Story */}
-          <div className="md:col-span-7 space-y-5">
-            <h3 className="font-cinzel text-2xl font-bold text-slate-100">
-              Transforming Uncertainty Into Strategic Insight
-            </h3>
-
-            <p className="text-sm text-slate-300 leading-relaxed">
-              I view the Tarot not as a parlor trick or fear-inducing fortune telling, but as an ancient psychological mirror and sacred cartography of the human psyche.
-            </p>
-
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Whether you are confronting a major professional crossroads, navigating complex relational dynamics, or seeking realignment with your authentic soul purpose, our readings create a serene space to decipher the underlying currents of your life.
-            </p>
-
-            {/* Guiding Principles Cards */}
-            <div className="space-y-3 pt-2">
-              {principles.map((p, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-obsidian-900/60 border border-slate-800 flex items-start space-x-3.5"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-cinzel font-bold text-slate-200">{p.title}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{p.description}</p>
-                  </div>
+            <div className="space-y-3.5">
+              {parameters.map((p) => (
+                <div key={p.label} className="border-b border-charcoal/80 pb-2.5 text-xs">
+                  <span className="font-mono text-[10px] text-smoke uppercase tracking-wider block">
+                    {p.label}
+                  </span>
+                  <span className="font-cinzel text-xs font-semibold text-bone mt-0.5 block">
+                    {p.value}
+                  </span>
                 </div>
               ))}
             </div>
+
+            <div className="pt-2 p-3.5 rounded-sm bg-ink/90 border-l-2 border-brass text-xs font-serif italic text-smoke">
+              "It's not magic. It's a model. You come for answers. You leave with perspective."
+            </div>
+          </div>
+
+          {/* Right Column: Quotes & Rational Manifesto */}
+          <div className="lg:col-span-7 space-y-5">
+            <h3 className="font-cinzel text-lg font-bold text-bone uppercase tracking-wider">
+              The Rationalist Manifesto
+            </h3>
+
+            <div className="space-y-4 text-xs sm:text-sm text-smoke leading-relaxed font-sans">
+              <p>
+                X believes that human life is an intricate web of recurring patterns — in people, relationships, corporate systems, and emotional compromises. Most suffering stems not from malicious curses or cosmic punishment, but from unobserved loops repeated until catastrophe occurs.
+              </p>
+              <p>
+                Tarot, for X, is a visual framework distilled from centuries of archetypal human psychology, myth, and decision-making systems. It functions as a structured mirror: it surfaces what you know subconsciously but refuse to admit consciously.
+              </p>
+            </div>
+
+            {/* Archival Quotes Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3">
+              {quotes.map((q, idx) => (
+                <div 
+                  key={idx}
+                  className="p-4 rounded-sm bg-ink border border-brass/20 space-y-2 relative flex flex-col justify-between"
+                >
+                  <Quote className="w-3.5 h-3.5 text-brass/50" />
+                  <p className="font-serif italic text-xs text-bone/90 leading-relaxed">
+                    "{q.text}"
+                  </p>
+                  <span className="text-[9px] font-mono text-smoke uppercase tracking-wider block pt-2 border-t border-charcoal/60">
+                    {q.context}
+                  </span>
+                </div>
+              ))}
+            </div>
+
           </div>
 
         </div>
@@ -87,3 +120,4 @@ export default function About() {
     </section>
   );
 }
+
