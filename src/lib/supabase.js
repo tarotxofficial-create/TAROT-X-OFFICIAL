@@ -51,7 +51,9 @@ export async function submitBooking(bookingData) {
           preferred_time: booking.preferred_time,
           timezone: booking.timezone || 'UTC',
           notes: booking.notes || '',
-          status: 'pending_confirmation'
+          status: booking.status || 'confirmed',
+          payment_id: booking.payment_id || '',
+          payment_status: booking.payment_status || 'paid'
         }])
         .select();
 

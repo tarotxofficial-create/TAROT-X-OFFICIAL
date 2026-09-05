@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS public.tarot_bookings (
   preferred_time TEXT NOT NULL,
   timezone TEXT DEFAULT 'UTC',
   notes TEXT,
-  status TEXT DEFAULT 'pending_confirmation'
+  payment_id TEXT,
+  payment_status TEXT DEFAULT 'paid',
+  status TEXT DEFAULT 'confirmed'
 );
 
 -- 3. Inquiries & Contact Messages Table
