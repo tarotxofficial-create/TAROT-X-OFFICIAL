@@ -1,55 +1,43 @@
 import React from 'react';
-import { Clock, CheckCircle2, Sparkles, ArrowRight, Video, FileText } from 'lucide-react';
+import { Clock, CheckCircle2, Sparkles, ArrowRight, Video, Mail, FileText } from 'lucide-react';
 
 export const READING_SERVICES = [
   {
-    id: 'clarity_crossroads',
-    title: 'Clarity & Crossroads Session',
-    duration: '30 Minutes',
-    price: '₹2,999 ($49)',
-    inrAmount: 2999,
+    id: 'offline_report',
+    type: 'offline',
+    title: 'Offline Reading Report',
+    duration: 'Sent via Email (24–48 Hrs)',
+    price: '₹99',
+    inrAmount: 99,
     popular: false,
-    tagline: 'Fast, laser-focused guidance on 1–2 specific questions.',
-    description: 'Perfect for urgent decisions, career pivots, or navigating an immediate relationship challenge.',
+    badge: 'Fast & Convenient',
+    tagline: 'Personalized written tarot dossier sent directly to your email inbox.',
+    description: 'Provide your questions and details. Receive a comprehensive, deeply analyzed written tarot report and high-resolution card spread photographs delivered straight to your email.',
     deliverables: [
-      'Live 1-on-1 Zoom or Phone Consultation',
-      'Targeted 3 to 5 Card Spread Analysis',
-      'High-Resolution Card Layout Photo',
-      'Actionable Next-Step Integration Advice'
+      'Comprehensive Written Tarot Report (Email/PDF)',
+      'High-Resolution Photographs of Your Card Spread',
+      'Targeted Answers to Your 1–3 Core Life Questions',
+      'Actionable Intuitive Guidance & Remedies',
+      'Delivered Directly to Your Email within 24–48 Hours'
     ]
   },
   {
-    id: 'deep_dive_lifepath',
-    title: 'Life Path & Deep Dive Reading',
-    duration: '60 Minutes',
-    price: '₹5,499 ($89)',
-    inrAmount: 5499,
+    id: 'live_zoom_30min',
+    type: 'live_zoom',
+    title: '1-to-1 Live Zoom Video Reading',
+    duration: '30 Minutes Live Call',
+    price: '₹999',
+    inrAmount: 999,
     popular: true,
-    tagline: 'Comprehensive exploration of your career, love & soul growth.',
-    description: 'Our most sought-after session. Unpacks current blockages, subconscious patterns, and the emerging 6-month horizon.',
+    badge: 'Most Popular · Live Session',
+    tagline: 'Private face-to-face consultation with live interactive card draws.',
+    description: 'A dedicated 30-minute private 1-on-1 session on Zoom. Discuss your situation in depth, ask real-time follow-up questions, and explore multi-layered card spreads together live.',
     deliverables: [
-      'Full 60-Minute Deep Dive Video Session',
-      '7 to 9 Card Multi-Layered Spread',
-      'Full Audio/Video Recording to Keep',
-      'Astrological & Numerological Context',
-      'Follow-Up Email Question Support'
-    ]
-  },
-  {
-    id: 'master_celtic_cross',
-    title: 'The Master Celtic Cross & Blueprint',
-    duration: '90 Minutes',
-    price: '₹8,499 ($139)',
-    inrAmount: 8499,
-    popular: false,
-    tagline: 'Exhaustive 10-card arcane blueprint and karmic mapping.',
-    description: 'An intensive spiritual immersion addressing karmic lessons, shadow integration, relationship mirrors, and ultimate life destiny.',
-    deliverables: [
-      'Exhaustive 90-Minute Master Consultation',
-      'Complete 10-Card Sacred Celtic Cross',
-      'Full Recording + Written Summary PDF',
-      'Chakra & Elemental Energy Assessment',
-      'Personalized Affirmation & Ritual Guide'
+      'Private 30-Minute Live 1-on-1 Zoom Consultation',
+      'Live Interactive Multi-Card Spreads & Intuitive Q&A',
+      'Direct Real-Time Clarification on Love, Career, or Crossroads',
+      'High-Definition Photo of Cards Sent Post-Session',
+      'Instant Calendar Invite & Secure Zoom Link via Email'
     ]
   }
 ];
@@ -57,7 +45,7 @@ export const READING_SERVICES = [
 export default function Services({ onSelectService }) {
   return (
     <section id="services" className="py-20 border-t border-slate-800/80 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Section Heading */}
         <div className="text-center space-y-3 max-w-2xl mx-auto">
@@ -69,34 +57,42 @@ export default function Services({ onSelectService }) {
             Reading Packages & Pricing
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            All sessions are conducted with complete confidentiality via live Zoom video or delivered as an audio/video recorded dossier.
+            Choose between a swift, thorough offline written report delivered to your email or an interactive 30-minute live 1-to-1 video reading on Zoom.
           </p>
         </div>
 
-        {/* 3 Packages Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        {/* 2 Packages Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-4xl mx-auto">
           {READING_SERVICES.map((srv) => (
             <div
               key={srv.id}
               className={`relative glass-panel rounded-3xl p-6 sm:p-8 flex flex-col justify-between border transition-all duration-300 hover:scale-[1.02] ${
                 srv.popular 
-                  ? 'border-gold-400 bg-obsidian-900/90 shadow-xl shadow-gold-500/10' 
+                  ? 'border-gold-400 bg-obsidian-900/90 shadow-2xl shadow-gold-500/15 ring-1 ring-gold-400/50' 
                   : 'border-slate-800 bg-obsidian-950/70 hover:border-slate-700'
               }`}
             >
-              {srv.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-gold-500 to-amber-600 text-obsidian-950 font-cinzel font-bold text-[10px] uppercase tracking-wider shadow-md">
-                  Most Requested
+              {srv.badge && (
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full font-cinzel font-bold text-[10px] uppercase tracking-wider shadow-md ${
+                  srv.popular
+                    ? 'bg-gradient-to-r from-gold-500 to-amber-600 text-obsidian-950'
+                    : 'bg-obsidian-800 border border-gold-500/40 text-gold-300'
+                }`}>
+                  {srv.badge}
                 </div>
               )}
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center space-x-1.5 text-xs font-mono text-gold-400">
-                    <Clock className="w-3.5 h-3.5" />
+                    {srv.type === 'offline' ? (
+                      <Mail className="w-3.5 h-3.5 text-gold-400" />
+                    ) : (
+                      <Video className="w-3.5 h-3.5 text-gold-400" />
+                    )}
                     <span>{srv.duration}</span>
                   </span>
-                  <span className="font-cinzel text-2xl sm:text-3xl font-black text-slate-100">
+                  <span className="font-cinzel text-3xl font-black text-slate-100">
                     {srv.price}
                   </span>
                 </div>
@@ -129,7 +125,7 @@ export default function Services({ onSelectService }) {
                       : 'bg-obsidian-900 border border-gold-500/40 text-gold-300 hover:bg-gold-500 hover:text-obsidian-950'
                   }`}
                 >
-                  <span>Select & Book Session</span>
+                  <span>Select & Book for {srv.price}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -142,3 +138,4 @@ export default function Services({ onSelectService }) {
     </section>
   );
 }
+

@@ -6,24 +6,24 @@ export default function FAQ() {
 
   const faqs = [
     {
-      q: 'How do remote video or audio readings work?',
-      a: 'All sessions take place via private Zoom video, phone/WhatsApp audio, or as a recorded video report depending on your preference. We begin by centering, discussing your core focus, and diving into the spreads with live interactive interpretation.'
+      q: 'How does the ₹99 Offline Email Reading Report work?',
+      a: 'When ordering the ₹99 service, you submit your questions and details through the booking form. No live call is required. We draw your cards with sacred focus and deliver a comprehensive written reading dossier along with high-definition photographs of your card spread directly to your email within 24–48 hours.'
     },
     {
-      q: 'What if I have never had a Tarot reading before?',
-      a: 'No prior experience is necessary. Our approach is grounded, empathetic, and explanatory. You do not need to memorize card meanings or hold any specific belief system; we walk through every card together clearly.'
+      q: 'How does the ₹999 1-to-1 Live Zoom Reading work?',
+      a: 'You select a preferred date and time slot for a dedicated 30-minute private video call on Zoom. You will receive a calendar invite and private Zoom link via email. During the session, we explore your spreads interactively, allowing you to ask real-time questions and receive instant intuitive clarity.'
+    },
+    {
+      q: 'What details do I need to provide for the ₹99 Offline Report?',
+      a: 'You simply provide your name, the email address where you want the report sent, your primary area of focus (Love, Career, Life Path, etc.), and 1 to 3 specific questions or situation details. You can also optionally include your date of birth or zodiac sign to help align energies.'
+    },
+    {
+      q: 'Can I ask follow-up questions during the 30-minute Live Zoom session?',
+      a: 'Yes, absolutely! The live 30-minute Zoom session is completely interactive. You can converse freely, ask follow-up questions as new cards are drawn, and explore multiple dimensions of your life.'
     },
     {
       q: 'Will you tell me bad news or predictive doom?',
       a: 'Never. We practice ethical, empowering intuitive guidance. The cards highlight underlying energy currents, psychological patterns, and potential trajectories so you can make empowered decisions, never fear-based predictions.'
-    },
-    {
-      q: 'Can I record the session or receive a copy?',
-      a: 'Yes. All video consultations are recorded and shared privately with you along with high-definition photos of your spreads for future reflection.'
-    },
-    {
-      q: 'How should I prepare for my reading?',
-      a: 'Simply choose a quiet, undisturbed space for the duration of the call. Spend a few minutes before our session reflecting on the key life areas or questions you would like clarity on.'
     }
   ];
 

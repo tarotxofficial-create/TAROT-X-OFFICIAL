@@ -9,7 +9,7 @@ import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 
 export default function App() {
-  const [selectedService, setSelectedService] = useState(READING_SERVICES[1]);
+  const [selectedService, setSelectedService] = useState(READING_SERVICES[0]);
 
   const scrollToBooking = (service) => {
     if (service) setSelectedService(service);

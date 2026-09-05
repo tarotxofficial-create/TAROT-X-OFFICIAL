@@ -10,10 +10,9 @@ Tarot X Official is an elegant, minimalist portfolio and reading booking platfor
 
 - ✦ **Intuitive Reader Portfolio**: Practitioner biography, core guiding principles, and ethical standards.
 - ✦ **Curated Reading Menu**:
-  - *Clarity & Crossroads Session* (30 Mins • $49)
-  - *Life Path & Deep Dive Reading* (60 Mins • $89)
-  - *The Master Celtic Cross & Blueprint* (90 Mins • $139)
-- ✦ **Direct Consultation Booking**: Seamless appointment scheduling with delivery format options (Live Zoom, Phone/WhatsApp Audio, or Recorded Video Dossier).
+  - *Offline Reading Report* (Detailed Written Dossier & Card Photos sent to Email • ₹99)
+  - *1-to-1 Live Zoom Video Reading* (30-Minute Face-to-Face Live Consultation • ₹999)
+- ✦ **Direct Consultation Booking**: Adaptive scheduling and question collection with instant Razorpay checkout.
 - ✦ **Client Reviews**: Authentic reflections from past seekers.
 - ✦ **Supabase Database Integration**: Automatic sync for client booking submissions.
 

@@ -25,7 +25,7 @@ export default function Hero({ onBookClick, onExploreServices }) {
 
         {/* Narrative Subtitle */}
         <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto">
-          Welcome to Tarot X Official. Providing private, compassionate, and deeply resonant intuitive readings designed to pierce through uncertainty and illuminate your authentic path.
+          Welcome to Tarot X Official. Choose between an in-depth offline report delivered directly to your email for <strong className="text-gold-300 font-semibold">₹99</strong>, or an interactive 30-minute 1-to-1 live video reading on Zoom for <strong className="text-gold-300 font-semibold">₹999</strong>.
         </p>
 
         {/* CTAs */}
@@ -42,7 +42,7 @@ export default function Hero({ onBookClick, onExploreServices }) {
             onClick={onExploreServices}
             className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-obsidian-900/80 hover:bg-obsidian-850 text-slate-200 border border-gold-500/30 hover:border-gold-400/60 font-cinzel font-semibold text-xs tracking-wider transition-all flex items-center justify-center space-x-2"
           >
-            <span>View Reading Packages</span>
+            <span>View 2 Services & Pricing</span>
             <ArrowDown className="w-3.5 h-3.5 text-gold-400" />
           </button>
         </div>
@@ -55,11 +55,11 @@ export default function Hero({ onBookClick, onExploreServices }) {
           </div>
           <div className="flex items-center justify-center space-x-2.5 text-xs text-slate-300">
             <Shield className="w-4 h-4 text-gold-400" />
-            <span>100% Strict Confidentiality</span>
+            <span>100% Confidential Guidance</span>
           </div>
           <div className="flex items-center justify-center space-x-2.5 text-xs text-slate-300">
             <HeartHandshake className="w-4 h-4 text-gold-400" />
-            <span>Live Zoom & Audio Delivery</span>
+            <span>₹99 Email Report · ₹999 Live Zoom</span>
           </div>
         </div>
 
