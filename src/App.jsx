@@ -33,10 +33,13 @@ export default function App() {
       {/* 1. WebGL 3D Zero-G Spatial Canvas (Fixed in Background) */}
       <AntigravityCanvas />
 
-      {/* 2. Atmospheric CRT Scanline & Grain Texture */}
-      <div className="fixed inset-0 scanline-overlay pointer-events-none z-10 opacity-20" />
+      {/* 2. Deep Space Contrast Vignette (Ensures 100% crystal clear foreground text contrast) */}
+      <div className="fixed inset-0 bg-gradient-to-b from-obsidian-950/70 via-obsidian-950/50 to-obsidian-950/75 pointer-events-none z-10" />
 
-      {/* 3. Sticky Top Navigation with 432Hz Synthesizer Audio Toggle */}
+      {/* 3. Atmospheric CRT Scanline & Grain Texture */}
+      <div className="fixed inset-0 scanline-overlay pointer-events-none z-10 opacity-15" />
+
+      {/* 4. Sticky Top Navigation with 432Hz Synthesizer Audio Toggle */}
       <Navbar onBookClick={() => scrollToBooking()} />
 
       {/* 4. Single Continuous Scroll-Down Sections */}

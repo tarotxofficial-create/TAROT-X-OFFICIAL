@@ -21,9 +21,9 @@ export default function AntigravityCanvas({ onCardSelect }) {
 
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    // Deep cosmic violet-black void
-    scene.background = new THREE.Color(0x04030a);
-    scene.fog = new THREE.FogExp2(0x060512, 0.0003);
+    // Deep pure velvety cosmic void
+    scene.background = new THREE.Color(0x020106);
+    scene.fog = new THREE.FogExp2(0x020106, 0.0004);
 
     const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 12000.0);
     cameraRef.current = camera;
@@ -38,30 +38,30 @@ export default function AntigravityCanvas({ onCardSelect }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.toneMappingExposure = 0.85; // Calibrated low for crystal clear foreground contrast
 
     containerRef.current.appendChild(renderer.domElement);
 
-    // --- 2. Vibrant Celestial Lighting Pipeline ---
-    // Overhead golden celestial spotlight
-    const goldSpotlight = new THREE.SpotLight(0xffe699, 2.5);
+    // --- 2. Low-Key Celestial Atmospheric Lighting ---
+    // Soft golden celestial spotlight (lowered from 2.5 to 0.85)
+    const goldSpotlight = new THREE.SpotLight(0xffe699, 0.85);
     goldSpotlight.position.set(0, 200, 150);
     goldSpotlight.angle = Math.PI / 3;
-    goldSpotlight.penumbra = 0.8;
+    goldSpotlight.penumbra = 0.9;
     scene.add(goldSpotlight);
 
-    // Cosmic Magenta/Violet directional light (Nebula glow)
-    const nebulaLight1 = new THREE.DirectionalLight(0xd946ef, 1.8);
+    // Subtle Violet/Magenta nebula accent (lowered from 1.8 to 0.6)
+    const nebulaLight1 = new THREE.DirectionalLight(0xd946ef, 0.6);
     nebulaLight1.position.set(-150, 100, -300);
     scene.add(nebulaLight1);
 
-    // Ethereal Cyan/Turquoise directional light (Stellar beam)
-    const nebulaLight2 = new THREE.DirectionalLight(0x06b6d4, 1.8);
+    // Subtle Ethereal Cyan stellar accent (lowered from 1.8 to 0.5)
+    const nebulaLight2 = new THREE.DirectionalLight(0x06b6d4, 0.5);
     nebulaLight2.position.set(150, -100, -500);
     scene.add(nebulaLight2);
 
-    // Deep Indigo/Purple ambient fill
-    const ambientLight = new THREE.AmbientLight(0x1e1238, 1.4);
+    // Muted deep indigo ambient fill (lowered from 1.4 to 0.4)
+    const ambientLight = new THREE.AmbientLight(0x0d0818, 0.4);
     scene.add(ambientLight);
 
     // --- 3. Circular Star Sprite Generator ---
@@ -148,11 +148,11 @@ export default function AntigravityCanvas({ onCardSelect }) {
     galaxyGeo.setAttribute('color', new THREE.BufferAttribute(galaxyColors, 3));
 
     const galaxyMat = new THREE.PointsMaterial({
-      size: 4.5,
+      size: 3.2,
       map: starSprite,
       vertexColors: true,
       transparent: true,
-      opacity: 0.95,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
@@ -232,13 +232,13 @@ export default function AntigravityCanvas({ onCardSelect }) {
       });
     });
 
-    // Glowing Constellation Lines
+    // Glowing Constellation Lines (Soft subtle vectors)
     const constLinesGeo = new THREE.BufferGeometry();
     constLinesGeo.setAttribute('position', new THREE.Float32BufferAttribute(constellationLinesPositions, 3));
     const constLinesMat = new THREE.LineBasicMaterial({
       color: 0x66fcf1,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending
     });
     const constellationLinesMesh = new THREE.LineSegments(constLinesGeo, constLinesMat);
@@ -248,11 +248,11 @@ export default function AntigravityCanvas({ onCardSelect }) {
     const constStarsGeo = new THREE.BufferGeometry();
     constStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(constellationStarPositions, 3));
     const constStarsMat = new THREE.PointsMaterial({
-      size: 7.5,
+      size: 4.8,
       map: starSprite,
       color: 0xffd166,
       transparent: true,
-      opacity: 1.0,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
@@ -412,9 +412,9 @@ export default function AntigravityCanvas({ onCardSelect }) {
       const mat = new THREE.MeshStandardMaterial({
         map: texture,
         metalness: 0.9,
-        roughness: 0.2,
-        emissive: new THREE.Color(0x1a0f30),
-        emissiveIntensity: 0.35,
+        roughness: 0.25,
+        emissive: new THREE.Color(0x0a0514),
+        emissiveIntensity: 0.12,
       });
 
       const mesh = new THREE.Mesh(cardGeometry, mat);
@@ -505,12 +505,12 @@ export default function AntigravityCanvas({ onCardSelect }) {
       galaxyGroup.rotation.z = elapsed * 0.02;
       constellationGroup.rotation.z = elapsed * 0.008;
 
-      // Twinkle constellation star sizes
-      const constellationScale = 1.0 + Math.sin(elapsed * 4) * 0.15;
-      constStarsMat.size = 7.5 * constellationScale;
+      // Subtle twinkle constellation star sizes
+      const constellationScale = 1.0 + Math.sin(elapsed * 2.5) * 0.1;
+      constStarsMat.size = 4.8 * constellationScale;
 
-      // Pulse spotlight subtly like a distant pulsar
-      goldSpotlight.intensity = 2.2 + Math.sin(elapsed * 2.5) * 0.4;
+      // Soft ambient celestial spotlight (calibrated low to ensure content visibility)
+      goldSpotlight.intensity = 0.85 + Math.sin(elapsed * 1.5) * 0.15;
 
       // Camera Z-Depth interpolation tracking continuous page scroll
       const docHeight = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
