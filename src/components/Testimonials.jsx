@@ -1,91 +1,70 @@
 import React from 'react';
-import { Terminal, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Star, Quote, Sparkles } from 'lucide-react';
 
 export default function Testimonials() {
-  const cases = [
+  const reviews = [
     {
-      id: 'CASE 084',
-      focus: 'Executive Partnership Dilemma',
-      session: '1-to-1 Live Zoom (₹999)',
-      quote: 'I entered expecting mystical generalities. Instead, X systematically dissected the recurrent conflict loop in my partnership negotiations that I had rationalized away for 14 months. It was not fortune-telling; it was behavioral radiography.',
-      author: 'Managing Director, Tech Co.',
-      location: 'Mumbai, IN',
-      outcome: 'Negotiation restructured within 72 hours'
+      name: 'Elena Rostova',
+      location: 'London, UK',
+      session: 'Life Path & Deep Dive',
+      quote: 'I was genuinely skeptical before booking, but the accuracy and gentle nuance of this session blew me away. She identified the exact professional stagnation I had been hiding from myself and gave me the courage to pivot.',
+      rating: 5
     },
     {
-      id: 'CASE 129',
-      focus: 'Product Execution Paralysis',
-      session: 'Offline Pattern Report (₹99)',
-      quote: 'The ₹99 Offline Dossier was shockingly razor-sharp. No promises of sudden wealth or cosmic destiny—just an uncompromising breakdown of why I stall at the 80% mark and which emotional variable I was pretending not to see.',
-      author: 'Systems Architect',
-      location: 'Bengaluru, IN',
-      outcome: 'Identified root bottleneck in personal workflow'
+      name: 'Marcus Vance',
+      location: 'San Francisco, CA',
+      session: 'Clarity & Crossroads',
+      quote: 'No fluffy generalizations or vague clichés. Just piercing, articulate insight that helped me resolve a 6-month partnership dilemma in 30 minutes. Absolutely invaluable.',
+      rating: 5
     },
     {
-      id: 'CASE 201',
-      focus: 'High-Stakes Career Pivot',
-      session: '1-to-1 Live Zoom (₹999)',
-      quote: '30 minutes on Zoom. No incense, no bells, zero theatrics. Just the cards treated as archetypal variables laid across a grid. I left with more structural clarity than six months of recursive overthinking had yielded.',
-      author: 'Quantitative Researcher',
-      location: 'New Delhi, IN',
-      outcome: 'Resigned and executed planned enterprise pivot'
+      name: 'Ananya Sharma',
+      location: 'Dubai, UAE',
+      session: 'Master Celtic Cross',
+      quote: 'The 90-minute Celtic Cross blueprint was like a year of therapy combined with spiritual architecture. The recorded replay has been my compass for the past six months.',
+      rating: 5
     }
   ];
 
   return (
-    <section id="reviews" className="py-24 border-t border-charcoal/80 bg-void scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section id="reviews" className="py-20 border-t border-slate-800/80 scroll-mt-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center space-x-2 text-brass text-xs font-mono uppercase tracking-[0.25em]">
-              <Terminal className="w-3.5 h-3.5" />
-              <span>Declassified Observations</span>
-            </div>
-            <h2 className="font-cinzel text-3xl sm:text-4xl font-bold text-bone tracking-tight">
-              Session Debriefs & Case Records
-            </h2>
-            <p className="text-xs sm:text-sm text-smoke font-sans max-w-xl">
-              Unvarnished reflections from clients who used the pattern reader to dismantle cognitive loops and clarify decisions.
-            </p>
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Client Experiences</span>
           </div>
-
-          <div className="inline-flex items-center space-x-2 text-xs font-mono text-smoke/70 border border-charcoal px-3 py-1.5 rounded-lg bg-ink/60">
-            <ShieldCheck className="w-4 h-4 text-brass" />
-            <span>Identity redacted for client confidentiality</span>
-          </div>
+          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
+            Words From Past Seekers
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Real reflections from clients who found grounded direction through our sacred readings.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cases.map((item, idx) => (
+          {reviews.map((rev, idx) => (
             <div
               key={idx}
-              className="bg-ink/60 p-6 sm:p-7 rounded-2xl border border-charcoal hover:border-brass/40 transition-all duration-300 flex flex-col justify-between space-y-6"
+              className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-800 flex flex-col justify-between space-y-4"
             >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs font-mono text-smoke border-b border-charcoal/60 pb-3">
-                  <span className="text-brass tracking-wider font-semibold">{item.id}</span>
-                  <span className="text-[11px] bg-charcoal/60 px-2 py-0.5 rounded text-smoke/80">{item.session}</span>
+              <div className="space-y-3">
+                <div className="flex text-gold-400 space-x-1">
+                  {[...Array(rev.rating)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-gold-400" />
+                  ))}
                 </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-smoke/60">Focus Field</span>
-                  <p className="text-xs font-semibold text-bone">{item.focus}</p>
-                </div>
-
-                <blockquote className="text-xs sm:text-[13px] text-smoke leading-relaxed italic border-l-2 border-brass/50 pl-3">
-                  "{item.quote}"
-                </blockquote>
+                <p className="text-xs text-slate-300 italic leading-relaxed">
+                  "{rev.quote}"
+                </p>
               </div>
 
-              <div className="pt-4 border-t border-charcoal/60 space-y-2 font-mono">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-bone font-sans font-medium">{item.author}</span>
-                  <span className="text-smoke/60">{item.location}</span>
-                </div>
-                <div className="flex items-center space-x-1.5 text-[10px] text-brass/90">
-                  <CheckCircle2 className="w-3 h-3 text-brass shrink-0" />
-                  <span className="truncate">{item.outcome}</span>
+              <div className="pt-4 border-t border-slate-800/80">
+                <h4 className="font-cinzel text-sm font-bold text-slate-100">{rev.name}</h4>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-0.5">
+                  <span>{rev.location}</span>
+                  <span className="text-gold-300 font-mono text-[10px]">{rev.session}</span>
                 </div>
               </div>
             </div>
@@ -96,4 +75,3 @@ export default function Testimonials() {
     </section>
   );
 }
-

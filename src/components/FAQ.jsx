@@ -1,51 +1,44 @@
 import React, { useState } from 'react';
-import { ChevronDown, HelpCircle, ShieldAlert, Cpu } from 'lucide-react';
+import { ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
 
 export default function FAQ() {
   const [openIdx, setOpenIdx] = useState(0);
 
   const faqs = [
     {
-      q: 'Is this fortune-telling or psychic prediction?',
-      a: 'No. X is an atheist and a rationalist. We do not channel spirits, predict lottery numbers, or claim supernatural powers. The 78 cards of the tarot represent an exhaustive, 600-year-old taxonomy of human archetypes, behavioral loops, and psychological states. We use them as an external cognitive mirror to diagnose the patterns governing your choices.'
-    },
-    {
-      q: 'How does the ₹99 Offline Pattern Report work?',
-      a: 'You submit your situation and answer the 5 intake questions through our encrypted form. No live call is required. Within 24–48 hours, X conducts your spread in the studio and emails you a structured, written diagnostic dossier (PDF format) complete with high-resolution photography of the spread and precise pattern analysis.'
+      q: 'How does the ₹99 Offline Email Reading Report work?',
+      a: 'When ordering the ₹99 service, you submit your questions and details through the booking form. No live call is required. We draw your cards with sacred focus and deliver a comprehensive written reading dossier along with high-definition photographs of your card spread directly to your email within 24–48 hours.'
     },
     {
       q: 'How does the ₹999 1-to-1 Live Zoom Reading work?',
-      a: 'A dedicated 30-minute private video consultation on Zoom with X. After selecting your slot and completing intake, you receive a direct calendar invitation. During the session, the card layout is built live on camera, dissecting your blind spots, risk variables, and decision architecture in real time.'
+      a: 'You select a preferred date and time slot for a dedicated 30-minute private video call on Zoom. You will receive a calendar invite and private Zoom link via email. During the session, we explore your spreads interactively, allowing you to ask real-time questions and receive instant intuitive clarity.'
     },
     {
-      q: 'What questions will X refuse to answer? (Boundary Protocol)',
-      a: 'Strict boundaries apply: We refuse queries requesting medical diagnoses, legal dispute outcomes, gambling advice, or third-party surveillance ("What is my ex thinking right now?"). The reading is strictly anchored to YOUR agency, YOUR psychology, and YOUR decision surface.'
+      q: 'What details do I need to provide for the ₹99 Offline Report?',
+      a: 'You simply provide your name, the email address where you want the report sent, your primary area of focus (Love, Career, Life Path, etc.), and 1 to 3 specific questions or situation details. You can also optionally include your date of birth or zodiac sign to help align energies.'
     },
     {
-      q: 'Do I need to believe in tarot, spirituality, or mysticism for this to work?',
-      a: 'Not at all. In fact, healthy skepticism is welcomed. Think of the spread not as magic, but as a projective diagnostic tool—similar to a structured Rorschach or decision tree. If you can think critically and confront your own habits honestly, the system will yield immense clarity.'
+      q: 'Can I ask follow-up questions during the 30-minute Live Zoom session?',
+      a: 'Yes, absolutely! The live 30-minute Zoom session is completely interactive. You can converse freely, ask follow-up questions as new cards are drawn, and explore multiple dimensions of your life.'
     },
     {
-      q: 'Is my intake and reading confidential?',
-      a: 'Strictly confidential. Your intake data, questions, and reading dossiers are never shared, published, or repurposed. All communications are private between you and X.'
+      q: 'Will you tell me bad news or predictive doom?',
+      a: 'Never. We practice ethical, empowering intuitive guidance. The cards highlight underlying energy currents, psychological patterns, and potential trajectories so you can make empowered decisions, never fear-based predictions.'
     }
   ];
 
   return (
-    <section id="faq" className="py-24 border-t border-charcoal/80 bg-ink/50 scroll-mt-24">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section id="faq" className="py-20 border-t border-slate-800/80 scroll-mt-24">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center space-x-2 text-brass text-xs font-mono uppercase tracking-[0.25em]">
+          <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Operational Clarity</span>
+            <span>Common Inquiries</span>
           </div>
-          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold text-bone tracking-tight">
-            Frequently Examined Questions
+          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
+            Frequently Asked Questions
           </h2>
-          <p className="text-xs sm:text-sm text-smoke font-sans max-w-lg mx-auto">
-            Everything you need to understand regarding method, boundaries, and session formats.
-          </p>
         </div>
 
         <div className="space-y-3">
@@ -54,25 +47,25 @@ export default function FAQ() {
             return (
               <div
                 key={idx}
-                className="bg-void/80 rounded-xl border border-charcoal hover:border-brass/30 transition-all duration-200 overflow-hidden"
+                className="glass-panel rounded-2xl border border-slate-800 overflow-hidden transition-all"
               >
                 <button
                   type="button"
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between space-x-4 hover:text-brass transition-colors"
+                  className="w-full p-5 text-left flex items-center justify-between space-x-4 hover:text-gold-300 transition-colors"
                 >
-                  <span className="font-cinzel text-sm sm:text-base font-semibold text-bone/90">
+                  <span className="font-cinzel text-sm sm:text-base font-bold text-slate-100">
                     {faq.q}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-brass shrink-0 transition-transform duration-300 ${
-                      isOpen ? 'rotate-180 text-brass' : 'text-smoke/60'
+                    className={`w-4 h-4 text-gold-400 shrink-0 transition-transform duration-300 ${
+                      isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-smoke leading-relaxed border-t border-charcoal/50 pt-4 font-sans">
+                  <div className="px-5 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 pt-3">
                     {faq.a}
                   </div>
                 )}
@@ -81,16 +74,7 @@ export default function FAQ() {
           })}
         </div>
 
-        {/* Boundary assurance strip */}
-        <div className="p-4 rounded-xl border border-charcoal bg-void/60 flex items-start space-x-3 text-xs text-smoke">
-          <ShieldAlert className="w-4 h-4 text-brass shrink-0 mt-0.5" />
-          <p>
-            <strong className="text-bone font-mono text-[11px] uppercase tracking-wider">Boundary Note:</strong> Every session is governed by strict analytical boundaries. If you require medical or psychiatric care, please contact certified clinical professionals immediately.
-          </p>
-        </div>
-
       </div>
     </section>
   );
 }
-

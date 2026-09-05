@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import PatternArchitecture from './components/PatternArchitecture';
-import Services, { READING_SERVICES } from './components/Services';
 import About from './components/About';
+import Services, { READING_SERVICES } from './components/Services';
 import Testimonials from './components/Testimonials';
 import BookingForm from './components/BookingForm';
 import FAQ from './components/FAQ';
@@ -21,52 +20,48 @@ export default function App() {
   };
 
   const scrollToServices = () => {
-    const el = document.getElementById('sessions');
+    const el = document.getElementById('services');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-void text-bone font-sans selection:bg-brass selection:text-void">
+    <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans selection:bg-gold-500 selection:text-obsidian-950">
       
       {/* Navigation */}
       <Navbar onBookClick={() => scrollToBooking()} />
 
-      {/* Main Narrative Flow */}
+      {/* Main Portfolio Sections */}
       <main>
-        {/* 1. Hero: Scenes 01 to 04 (Coordinates, Room, Thesis, Contradiction badges & interactive card probes) */}
+        {/* 1. Hero */}
         <Hero 
           onBookClick={() => scrollToBooking()} 
           onExploreServices={scrollToServices} 
         />
 
-        {/* 2. Method: Pattern Architecture (6-node diagnostic cycle + 4 foundational principles) */}
-        <PatternArchitecture onBookClick={() => scrollToBooking()} />
-
-        {/* 3. Sessions: Section 8 (Choose the room you need: ₹99 Offline Dossier & ₹999 1-to-1 Live Zoom) */}
-        <Services onSelectService={(srv) => scrollToBooking(srv)} />
-
-        {/* 4. About: Section 11 (Philosophy over biography, archival parameters, rationalist manifesto) */}
+        {/* 2. Reader Portfolio & Philosophy */}
         <About />
 
-        {/* 5. Case Logs: Session debriefs & declassified observations */}
+        {/* 3. Reading Packages & Pricing */}
+        <Services onSelectService={(srv) => scrollToBooking(srv)} />
+
+        {/* 4. Client Testimonials */}
         <Testimonials />
 
-        {/* 6. Intake & Booking: Section 9 & 10 (5 intake questions, boundary protocol, live checkout & confirmation scene) */}
+        {/* 5. Direct Reading Booking Form */}
         <BookingForm 
           selectedService={selectedService} 
           onServiceChange={setSelectedService} 
         />
 
-        {/* 7. FAQ: Operational clarity and boundary protocol */}
+        {/* 6. FAQ */}
         <FAQ />
       </main>
 
-      {/* 8. Footer: Section 12 (Archival editorial footer with closing manifesto quote) */}
+      {/* Footer */}
       <Footer />
 
     </div>
   );
 }
-

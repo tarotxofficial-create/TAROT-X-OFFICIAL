@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp, Terminal, ShieldAlert } from 'lucide-react';
+import { Sparkles, Mail, ShieldCheck, Heart, ArrowUp } from 'lucide-react';
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -7,69 +7,53 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-charcoal/80 bg-void text-smoke py-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <footer className="border-t border-gold-500/20 bg-obsidian-950 py-12 text-slate-400">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-3">
-              <span className="font-cinzel text-xl font-bold tracking-[0.2em] text-bone">
-                X <span className="text-brass">/</span> PATTERN READER
-              </span>
-              <span className="text-[10px] font-mono text-brass/70 border border-charcoal px-2 py-0.5 rounded">
-                28.6139° N, 77.2090° E
-              </span>
+          <div className="flex items-center space-x-3 text-center md:text-left">
+            <div className="w-8 h-8 rounded-lg bg-obsidian-900 border border-gold-500/30 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-gold-400" />
             </div>
-            <p className="text-xs text-smoke/70 max-w-sm font-sans">
-              An anonymous rationalist tarot practice. You don't need a prophecy. You need to see the pattern.
-            </p>
+            <div>
+              <span className="font-cinzel text-base font-bold gold-gradient-text tracking-wider">
+                TAROT X OFFICIAL
+              </span>
+              <p className="text-[11px] text-slate-500">
+                Intuitive Readings & Spiritual Consulting
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono tracking-wider">
-            <a href="#method" className="hover:text-brass transition-colors">METHOD</a>
-            <a href="#sessions" className="hover:text-brass transition-colors">SESSIONS</a>
-            <a href="#about" className="hover:text-brass transition-colors">ABOUT</a>
-            <a href="#reviews" className="hover:text-brass transition-colors">CASE LOGS</a>
-            <a href="#booking" className="hover:text-brass transition-colors">BOOKING</a>
-            <a href="#faq" className="hover:text-brass transition-colors">FAQ</a>
+          <div className="flex items-center space-x-6 text-xs text-slate-400">
+            <a href="#about" className="hover:text-gold-300 transition-colors">About</a>
+            <a href="#services" className="hover:text-gold-300 transition-colors">Readings</a>
+            <a href="#reviews" className="hover:text-gold-300 transition-colors">Reviews</a>
+            <a href="#booking" className="hover:text-gold-300 transition-colors">Book Now</a>
           </div>
 
           <button
             onClick={scrollToTop}
-            className="p-3 rounded-xl bg-ink border border-charcoal hover:border-brass/50 text-smoke hover:text-brass transition-all flex items-center space-x-2 text-xs font-mono"
-            title="Return to top"
+            className="p-2.5 rounded-xl bg-obsidian-900 border border-slate-800 hover:border-gold-500/40 text-slate-400 hover:text-gold-300 transition-all flex items-center space-x-1.5 text-xs"
+            title="Scroll to Top"
           >
-            <span>TOP</span>
-            <ArrowUp className="w-3.5 h-3.5 text-brass" />
+            <span>Back to Top</span>
+            <ArrowUp className="w-3.5 h-3.5" />
           </button>
 
         </div>
 
-        {/* Archival Manifesto Quote Banner */}
-        <div className="py-8 px-6 sm:px-8 rounded-2xl bg-ink/70 border border-charcoal relative overflow-hidden text-center space-y-2">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brass/40 to-transparent" />
-          <p className="font-cinzel text-base sm:text-lg text-bone/90 italic tracking-wide">
-            "Your future is not fixed. Your patterns are not innocent either."
-          </p>
-          <p className="text-xs font-mono uppercase tracking-[0.3em] text-brass">
-            — X
-          </p>
-        </div>
-
-        {/* Legal and boundary protocol */}
-        <div className="pt-8 border-t border-charcoal/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-smoke/60 text-center sm:text-left font-mono">
+        <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
           <p>
-            © {new Date().getFullYear()} X / PATTERN READER. ALL RIGHTS RESERVED.
+            © {new Date().getFullYear()} TAROT X OFFICIAL. All rights reserved.
           </p>
-          <div className="flex items-center space-x-2 text-[11px] text-smoke/50">
-            <ShieldAlert className="w-3.5 h-3.5 text-brass/70 shrink-0" />
-            <span>Strict analytical boundaries. Not medical, psychiatric, or legal counsel.</span>
-          </div>
+          <p className="text-[11px]">
+            Readings are intended for intuitive reflection and self-guidance.
+          </p>
         </div>
 
       </div>
     </footer>
   );
 }
-

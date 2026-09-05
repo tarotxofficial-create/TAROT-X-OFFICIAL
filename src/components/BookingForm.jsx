@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -6,15 +6,14 @@ import {
   Mail, 
   Phone, 
   MessageSquare, 
+  Sparkles, 
   CheckCircle2, 
   Video, 
   CreditCard, 
   Lock, 
   AlertCircle,
   FileText,
-  ShieldAlert,
-  ArrowRight,
-  ArrowLeft
+  HelpCircle
 } from 'lucide-react';
 import { submitBooking } from '../lib/supabase';
 import { initiateRazorpayCheckout } from '../lib/razorpay';
@@ -29,70 +28,62 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     phone: '',
     serviceId: initialService.id,
     
-    // Intake Questions from Section 9
-    clarityTopic: '',
-    factsContext: '',
-    hopedOutcome: '',
-    avoidedDecision: '',
-    additionalNotes: '',
+    // Offline Reading specific details
+    focusArea: 'Love & Relationships',
+    birthDetails: '',
+    offlineQuestions: '',
     
-    // Scheduling (for live Zoom)
+    // Live Zoom specific details
     preferredDate: '',
     preferredTime: '18:00',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-    
-    // Boundary Agreement
-    boundaryAgreed: false
+    zoomNotes: '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   });
 
-  const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Sync when parent prop changes
-  useEffect(() => {
+  // Synchronize when parent prop changes
+  React.useEffect(() => {
     if (selectedService) {
       setFormData(prev => ({ ...prev, serviceId: selectedService.id }));
     }
   }, [selectedService]);
 
   const activeService = READING_SERVICES.find(s => s.id === formData.serviceId) || READING_SERVICES[0];
-  const isLive = activeService.type === 'live_zoom';
+  const isOffline = activeService.type === 'offline';
 
   const handleServiceSelect = (srv) => {
     setFormData(prev => ({ ...prev, serviceId: srv.id }));
     if (onServiceChange) onServiceChange(srv);
   };
 
-  const handlePayAndConfirm = async (e) => {
-    if (e) e.preventDefault();
+  const handlePayAndBook = async (e) => {
+    e.preventDefault();
     setErrorMsg('');
 
     // Validations
     if (!formData.name.trim() || !formData.email.trim()) {
-      setErrorMsg('Full Name and Email Address are required.');
+      setErrorMsg('Please provide your Full Name and Email Address.');
       return;
     }
 
-    if (!formData.clarityTopic.trim()) {
-      setErrorMsg('Please tell X what you would like clarity about.');
-      return;
-    }
-
-    if (!formData.boundaryAgreed) {
-      setErrorMsg('You must agree to the rationalist boundary guidelines before proceeding.');
-      return;
-    }
-
-    if (isLive && !formData.preferredDate) {
-      setErrorMsg('Please select your preferred date for the 30-minute Zoom session.');
-      return;
+    if (isOffline) {
+      if (!formData.offlineQuestions.trim()) {
+        setErrorMsg('Please share your questions or situation so the reader has all details needed for your offline report.');
+        return;
+      }
+    } else {
+      if (!formData.preferredDate) {
+        setErrorMsg('Please select your preferred date for the 30-minute Zoom session.');
+        return;
+      }
     }
 
     setSubmitting(true);
 
-    // Launch Razorpay Live Gateway (₹99 or ₹999)
+    // Launch Razorpay Live Payment Modal with exact amount (₹99 or ₹999)
     initiateRazorpayCheckout({
       serviceTitle: activeService.title,
       amountInINR: activeService.inrAmount,
@@ -101,13 +92,9 @@ export default function BookingForm({ selectedService, onServiceChange }) {
       customerPhone: formData.phone.trim(),
       onSuccess: async (paymentDetails) => {
         try {
-          const formattedIntake = [
-            `[CLARITY TOPIC]: ${formData.clarityTopic.trim()}`,
-            `[FACTS CONTEXT]: ${formData.factsContext.trim() || 'N/A'}`,
-            `[HOPED OUTCOME]: ${formData.hopedOutcome.trim() || 'N/A'}`,
-            `[AVOIDED DECISION]: ${formData.avoidedDecision.trim() || 'N/A'}`,
-            `[ADDITIONAL NOTES]: ${formData.additionalNotes.trim() || 'N/A'}`
-          ].join('\n\n');
+          const notesContent = isOffline 
+            ? `[Focus: ${formData.focusArea}] [Birth/Zodiac: ${formData.birthDetails.trim() || 'N/A'}] Questions & Context: ${formData.offlineQuestions.trim()}`
+            : (formData.zoomNotes.trim() || 'No additional notes provided');
 
           const payload = {
             name: formData.name.trim(),
@@ -115,11 +102,15 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             phone: formData.phone.trim(),
             service_title: activeService.title,
             price: activeService.price,
-            format: isLive ? 'Live Zoom Video (30 Min)' : 'Offline Pattern Dossier (Email)',
-            preferred_date: isLive ? formData.preferredDate : new Date().toISOString().split('T')[0],
-            preferred_time: isLive ? formData.preferredTime : 'Sent within 24–48 Hours',
+            format: isOffline ? 'Offline Email Report' : 'Live Zoom Video (30 Min)',
+            preferred_date: isOffline 
+              ? new Date().toISOString().split('T')[0] 
+              : formData.preferredDate,
+            preferred_time: isOffline 
+              ? 'Delivery within 24–48 hrs' 
+              : formData.preferredTime,
             timezone: formData.timezone,
-            notes: formattedIntake,
+            notes: notesContent,
             payment_id: paymentDetails.paymentId,
             order_id: paymentDetails.orderId,
             payment_status: 'paid',
@@ -133,19 +124,19 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             setConfirmed({
               ...result.booking,
               paymentId: paymentDetails.paymentId,
-              isLive
+              isOffline
             });
           } else {
-            setErrorMsg('Payment succeeded, but reservation record could not be saved. Contact tarotxofficial@gmail.com with ID: ' + paymentDetails.paymentId);
+            setErrorMsg('Payment succeeded, but could not save booking. Please contact tarotxofficial@gmail.com with ID: ' + paymentDetails.paymentId);
           }
         } catch (err) {
           setSubmitting(false);
-          setErrorMsg(err.message || 'Error finalizing booking.');
+          setErrorMsg(err.message || 'Error finalizing booking after payment.');
         }
       },
       onFailure: (err) => {
         setSubmitting(false);
-        setErrorMsg(err?.message || 'Payment transaction was cancelled or unsuccessful.');
+        setErrorMsg(err?.message || 'Payment was cancelled or unsuccessful. You can try again anytime.');
       },
       onDismiss: () => {
         setSubmitting(false);
@@ -154,31 +145,31 @@ export default function BookingForm({ selectedService, onServiceChange }) {
   };
 
   return (
-    <section id="booking" className="py-24 border-t border-brass/20 bg-void scroll-mt-20">
+    <section id="booking" className="py-20 border-t border-slate-800/80 scroll-mt-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Section Header */}
-        <div className="space-y-3 text-center">
-          <div className="inline-flex items-center space-x-2 text-brass text-[11px] font-mono uppercase tracking-[0.25em]">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>The Booking Chamber</span>
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Consultation Scheduler & Checkout</span>
           </div>
-          <h2 className="font-cinzel text-3xl sm:text-5xl font-bold text-bone">
-            Bring the question you keep avoiding.
+          <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
+            Book Your Reading
           </h2>
-          <p className="text-xs sm:text-sm text-smoke max-w-lg mx-auto leading-relaxed font-sans">
-            Calm, confidential, and ordinary. Select your session, outline the facts, and reserve your time directly.
+          <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+            Choose your preferred service, enter your details, and proceed with 100% secure payment via Razorpay.
           </p>
         </div>
 
-        {/* Booking Container */}
-        <div className="archive-panel p-6 sm:p-10 rounded-sm border border-brass/30 space-y-8">
+        {/* Booking Card Container */}
+        <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-gold-500/30 shadow-2xl space-y-8">
           
-          {/* Step 01: Choose Session Selector */}
+          {/* Service Selector Tabs */}
           <div className="space-y-3">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brass block">
-              STEP 01 // SELECT SESSION
-            </span>
+            <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300 block">
+              1. Select Service Type *
+            </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {READING_SERVICES.map((srv) => {
                 const isSel = srv.id === activeService.id;
@@ -187,42 +178,213 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                     key={srv.id}
                     type="button"
                     onClick={() => handleServiceSelect(srv)}
-                    className={`p-4 rounded-sm border text-left transition-all ${
+                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
                       isSel 
-                        ? 'border-brass bg-charcoal text-bone shadow-md ring-1 ring-brass/40' 
-                        : 'border-brass/20 bg-void text-smoke hover:border-brass/40'
+                        ? 'border-gold-400 bg-obsidian-900 shadow-lg shadow-gold-500/10 ring-1 ring-gold-400/60' 
+                        : 'border-slate-800 bg-obsidian-950/60 hover:border-slate-700 text-slate-400'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-cinzel text-xs font-bold uppercase tracking-wider">{srv.title}</span>
-                      <span className="font-cinzel text-base font-bold text-brass">{srv.price}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        {srv.type === 'offline' ? (
+                          <Mail className={`w-4 h-4 ${isSel ? 'text-gold-400' : 'text-slate-500'}`} />
+                        ) : (
+                          <Video className={`w-4 h-4 ${isSel ? 'text-gold-400' : 'text-slate-500'}`} />
+                        )}
+                        <span className={`font-cinzel text-sm font-bold ${isSel ? 'text-slate-100' : 'text-slate-300'}`}>
+                          {srv.title}
+                        </span>
+                      </div>
+                      <span className={`font-cinzel text-lg font-black ${isSel ? 'text-gold-400' : 'text-slate-400'}`}>
+                        {srv.price}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-mono text-smoke block mt-1.5">{srv.duration}</span>
+                    <p className="text-xs text-slate-400 mt-2">
+                      {srv.duration}
+                    </p>
                   </button>
                 );
               })}
             </div>
           </div>
 
+          {/* Service Specific Notice Banner */}
+          <div className="p-4 rounded-2xl bg-obsidian-900/90 border border-gold-500/30 flex items-start space-x-3 text-xs">
+            {isOffline ? (
+              <>
+                <Mail className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-cinzel text-gold-300 font-bold uppercase tracking-wider block">
+                    Offline Reading Report — ₹99
+                  </span>
+                  <p className="text-slate-300 leading-relaxed">
+                    No live call needed. Share your questions and details below. The reader will draw your spread with sacred focus, and your detailed written report with card photos will be sent directly to your email within <strong>24–48 hours</strong>.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <Video className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-cinzel text-gold-300 font-bold uppercase tracking-wider block">
+                    1-to-1 Live Video Zoom Reading — ₹999
+                  </span>
+                  <p className="text-slate-300 leading-relaxed">
+                    A private 30-minute face-to-face video consultation. Pick your preferred date and time slot below. Your private Zoom meeting link and calendar invite will be dispatched to your email.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Form */}
-          <form onSubmit={(e) => { e.preventDefault(); handlePayAndConfirm(); }} className="space-y-8">
+          <form onSubmit={handlePayAndBook} className="space-y-6">
             
             {errorMsg && (
-              <div className="p-3.5 rounded-sm bg-blood-ink/30 border border-blood-ink text-bone text-xs flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-blood-ink shrink-0" />
+              <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            {/* Step 02: Scheduling / Delivery Timeframe */}
-            {isLive ? (
-              <div className="space-y-4 pt-4 border-t border-brass/15">
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brass block">
-                  STEP 02 // SCHEDULE 30-MINUTE ZOOM SESSION
-                </span>
+            {/* Core Client Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              {/* Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
+                  Full Name *
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Your Full Name"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Email Address */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                  <span>Email Address *</span>
+                  <span className="text-[10px] text-gold-400 lowercase font-mono">
+                    {isOffline ? '(report sent here)' : '(zoom link sent here)'}
+                  </span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="yourname@gmail.com"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Phone / WhatsApp */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
+                  Phone / WhatsApp (Recommended for updates)
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+91 98765 43210"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* ADAPTIVE FIELDS: OFFLINE REPORT (₹99) */}
+            {isOffline && (
+              <div className="space-y-5 pt-2 border-t border-slate-800">
+                <div className="flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-wider">
+                  <FileText className="w-4 h-4" />
+                  <span>2. Details Needed for Your Reading</span>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Primary Focus Area */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-mono text-smoke uppercase tracking-wider block">
+                    <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
+                      Primary Area of Focus *
+                    </label>
+                    <select
+                      value={formData.focusArea}
+                      onChange={(e) => setFormData({ ...formData, focusArea: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 focus:border-gold-400 outline-none"
+                    >
+                      <option value="Love & Relationships">Love & Relationships</option>
+                      <option value="Career & Financial Growth">Career & Financial Growth</option>
+                      <option value="Life Path & Soul Purpose">Life Path & Soul Purpose</option>
+                      <option value="Urgent Decision / Crossroads">Urgent Decision / Crossroads</option>
+                      <option value="General Intuitive Overview">General Intuitive Overview</option>
+                    </select>
+                  </div>
+
+                  {/* Birth Details / Sun Sign */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
+                      Date of Birth / Zodiac (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.birthDetails}
+                      onChange={(e) => setFormData({ ...formData, birthDetails: e.target.value })}
+                      placeholder="e.g. 14 Aug 1995 or Leo (helps tune into energies)"
+                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Specific Questions for Reading */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-cinzel uppercase tracking-wider text-gold-400 font-bold flex items-center justify-between">
+                    <span>Questions & Situation Context for the Reading *</span>
+                    <span className="text-[10px] text-slate-400 font-normal">1 to 3 core questions</span>
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      rows={4}
+                      required
+                      value={formData.offlineQuestions}
+                      onChange={(e) => setFormData({ ...formData, offlineQuestions: e.target.value })}
+                      placeholder="Please share 1–3 specific questions or describe your situation in detail. Include names or contexts if asking about a relationship or career decision..."
+                      className="w-full p-4 rounded-xl bg-obsidian-900 border border-gold-500/40 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none leading-relaxed"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    💡 The more context you provide, the deeper and more precise your written tarot report will be.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ADAPTIVE FIELDS: LIVE ZOOM (₹999) */}
+            {!isOffline && (
+              <div className="space-y-5 pt-2 border-t border-slate-800">
+                <div className="flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-wider">
+                  <Calendar className="w-4 h-4" />
+                  <span>2. Schedule Your 30-Minute Zoom Session</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Preferred Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-cinzel uppercase tracking-wider text-gold-400 font-bold">
                       Preferred Date *
                     </label>
                     <input
@@ -231,18 +393,19 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                       min={new Date().toISOString().split('T')[0]}
                       value={formData.preferredDate}
                       onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                      className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone focus:border-brass outline-none font-mono"
+                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-gold-500/40 text-xs text-slate-100 focus:border-gold-400 outline-none"
                     />
                   </div>
 
+                  {/* Preferred Time */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-mono text-smoke uppercase tracking-wider block">
+                    <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
                       Preferred Time Slot (30 Mins) *
                     </label>
                     <select
                       value={formData.preferredTime}
                       onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                      className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone focus:border-brass outline-none font-mono"
+                      className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 focus:border-gold-400 outline-none"
                     >
                       <option value="10:00 AM">10:00 AM (Morning Slot)</option>
                       <option value="02:00 PM">02:00 PM (Afternoon Slot)</option>
@@ -251,191 +414,48 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                     </select>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="p-4 rounded-sm bg-void border border-brass/25 flex items-start space-x-3 text-xs">
-                <Mail className="w-4 h-4 text-brass shrink-0 mt-0.5" />
-                <div className="space-y-1 font-sans">
-                  <span className="font-mono text-brass text-[10px] uppercase tracking-widest block">
-                    STEP 02 // ASYNCHRONOUS EMAIL DELIVERY
-                  </span>
-                  <p className="text-smoke text-xs leading-relaxed">
-                    No live call required. X will draw your spread with dedicated focus. Your written pattern dossier and high-definition card spread photographs will be dispatched to your email within <strong>24–48 hours</strong>.
-                  </p>
+
+                {/* Topics / Notes */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
+                    Topics or Questions for the Call (Optional)
+                  </label>
+                  <div className="relative">
+                    <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <textarea
+                      rows={3}
+                      value={formData.zoomNotes}
+                      onChange={(e) => setFormData({ ...formData, zoomNotes: e.target.value })}
+                      placeholder="Share what situation or decisions you would like to explore together during our 30-minute live call..."
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step 03: The Intake Questions */}
-            <div className="space-y-5 pt-4 border-t border-brass/15">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brass block">
-                STEP 03 // CLIENT INTAKE & FACTS
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Full Name / Preferred Alias */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono text-smoke uppercase tracking-wider block">
-                    Full Name or Preferred Alias *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="How X should address you"
-                    className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                  />
-                </div>
-
-                {/* Email Address */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono text-smoke uppercase tracking-wider block">
-                    Email Address * (for report / zoom invite)
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="yourname@domain.com"
-                    className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                  />
-                </div>
-
-                {/* Phone / WhatsApp */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-mono text-smoke uppercase tracking-wider block">
-                    Phone / WhatsApp (Optional // for appointment reminders)
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Brief Intake Q1 */}
-              <div className="space-y-1.5 pt-2">
-                <label className="text-xs font-cinzel font-bold text-bone block">
-                  1. What would you like clarity about? *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.clarityTopic}
-                  onChange={(e) => setFormData({ ...formData, clarityTopic: e.target.value })}
-                  placeholder="e.g. A career transition, relationship impasse, or unexplainable plateau..."
-                  className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                />
-              </div>
-
-              {/* Brief Intake Q2 */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-cinzel font-bold text-bone block">
-                  2. What has already happened? (Please describe facts before interpretations)
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.factsContext}
-                  onChange={(e) => setFormData({ ...formData, factsContext: e.target.value })}
-                  placeholder="State the timeline, tangible actions taken, and who is involved. Concrete reality over emotional theories..."
-                  className="w-full p-3.5 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none leading-relaxed"
-                />
-              </div>
-
-              {/* Brief Intake Q3 & Q4 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-cinzel font-bold text-bone block">
-                    3. What outcome are you hoping for?
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.hopedOutcome}
-                    onChange={(e) => setFormData({ ...formData, hopedOutcome: e.target.value })}
-                    placeholder="Your ideal realistic resolution"
-                    className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-cinzel font-bold text-bone block">
-                    4. Is there a decision you are currently avoiding?
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.avoidedDecision}
-                    onChange={(e) => setFormData({ ...formData, avoidedDecision: e.target.value })}
-                    placeholder="The conversation, boundary, or exit you delay"
-                    className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Brief Intake Q5 */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-cinzel font-bold text-bone block">
-                  5. Anything X should know before the session? (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.additionalNotes}
-                  onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                  placeholder="Date of birth, zodiac context, or sensitivities..."
-                  className="w-full px-3.5 py-3 rounded-sm bg-void border border-brass/30 text-xs text-bone placeholder-smoke/50 focus:border-brass outline-none"
-                />
-              </div>
-
-            </div>
-
-            {/* Boundary Copy from Section 9 */}
-            <div className="p-4 rounded-sm bg-charcoal/60 border border-brass/30 space-y-3">
-              <div className="flex items-start space-x-2 text-brass text-xs font-mono uppercase tracking-widest">
-                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>EXPLICIT BOUNDARY PROTOCOL</span>
-              </div>
-              <p className="text-xs text-smoke leading-relaxed font-sans">
-                "X does not claim supernatural certainty. A reading is a reflective pattern-analysis experience, not medical, legal, financial, psychological, or emergency advice."
-              </p>
-              <label className="flex items-center space-x-2.5 pt-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={formData.boundaryAgreed}
-                  onChange={(e) => setFormData({ ...formData, boundaryAgreed: e.target.checked })}
-                  className="w-4 h-4 rounded-sm accent-[#A98C5B]"
-                />
-                <span className="text-xs text-bone font-mono">
-                  I understand and accept the rationalist boundaries of this practice.
-                </span>
-              </label>
-            </div>
-
-            {/* Step 05: Payment Button */}
-            <div className="space-y-3 pt-2">
+            {/* Razorpay Pay & Confirm Button */}
+            <div className="space-y-3 pt-4">
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-4 rounded-sm bg-brass text-void font-cinzel font-bold text-xs uppercase tracking-[0.25em] shadow-xl shadow-brass/10 hover:bg-brass-light active:scale-98 disabled:opacity-50 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-400 via-amber-500 to-yellow-600 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-widest shadow-xl shadow-gold-500/20 hover:scale-[1.01] active:scale-98 disabled:opacity-50 transition-all flex items-center justify-center space-x-2"
               >
-                <CreditCard className="w-4 h-4 text-void" />
+                <CreditCard className="w-4 h-4 text-obsidian-950" />
                 <span>
                   {submitting 
                     ? 'Connecting to Secure Gateway...' 
-                    : isLive
-                      ? `CONFIRM & PAY ₹999 FOR 30-MIN ZOOM`
-                      : `CONFIRM & PAY ₹99 FOR OFFLINE DOSSIER`}
+                    : isOffline
+                      ? `Pay ₹99 & Order Offline Report`
+                      : `Pay ₹999 & Confirm 30-Min Zoom Session`}
                 </span>
               </button>
 
-              <div className="p-3 rounded-sm bg-void border border-brass/15 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono text-smoke">
+              {/* Supported payment methods badges */}
+              <div className="p-3 rounded-xl bg-obsidian-900/60 border border-slate-800 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-slate-400">
                 <span className="flex items-center space-x-1">
-                  <Lock className="w-3 h-3 text-brass" />
-                  <span>Razorpay 256-Bit SSL PCI-Compliant</span>
+                  <Lock className="w-3 h-3 text-gold-400" />
+                  <span>Razorpay 256-Bit SSL Secured</span>
                 </span>
                 <span>•</span>
                 <span>UPI (GPay / PhonePe / Paytm)</span>
@@ -450,67 +470,63 @@ export default function BookingForm({ selectedService, onServiceChange }) {
 
       </div>
 
-      {/* Confirmation Scene (Section 10 from brief) */}
+      {/* Confirmation Modal */}
       {confirmed && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-void/90 backdrop-blur-md animate-fade-in">
-          <div className="archive-panel w-full max-w-lg rounded-sm border border-brass p-7 sm:p-10 space-y-6 shadow-2xl">
-            
-            <div className="w-12 h-12 rounded-sm bg-ink border border-brass flex items-center justify-center mx-auto text-brass">
-              <CheckCircle2 className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/85 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel w-full max-w-md rounded-3xl border-2 border-gold-500 p-6 sm:p-8 text-center space-y-5 shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
 
-            <div className="space-y-2 text-center">
-              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-brass">
-                CONFIRMATION // ARCHIVE REF: {confirmed.paymentId?.substring(0, 10) || 'CONFIRMED'}
+            <div className="space-y-1">
+              <span className="text-xs font-cinzel uppercase tracking-widest text-gold-400 font-bold">
+                ✦ Payment Verified & Order Confirmed ✦
               </span>
-              <h3 className="font-cinzel text-2xl sm:text-3xl font-bold text-bone">
-                The room is reserved.
+              <h3 className="font-cinzel text-xl font-bold text-slate-100">
+                Thank You, {confirmed.name}
               </h3>
-              <p className="text-xs font-serif italic text-smoke leading-relaxed">
-                "Bring the question you keep avoiding. Bring the facts. Leave the performance outside."
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {confirmed.isOffline ? (
+                  <>
+                    Your reading details have been received. Your offline tarot report and spread photographs will be delivered directly to <strong>{confirmed.email}</strong> within <strong>24–48 hours</strong>.
+                  </>
+                ) : (
+                  <>
+                    Your 30-minute live Zoom session is booked! A private meeting link and calendar access have been dispatched to <strong>{confirmed.email}</strong>.
+                  </>
+                )}
               </p>
             </div>
 
-            <div className="p-4 rounded-sm bg-void border border-brass/25 space-y-2.5 text-xs font-mono text-smoke">
+            <div className="p-4 rounded-2xl bg-obsidian-900/90 border border-slate-800 text-left space-y-2 text-xs">
               <div className="flex justify-between">
-                <span>Session:</span>
-                <span className="text-bone font-semibold">{confirmed.service_title}</span>
+                <span className="text-slate-400">Payment ID:</span>
+                <span className="font-mono text-gold-300 font-semibold">{confirmed.paymentId || 'Verified'}</span>
               </div>
               <div className="flex justify-between">
-                <span>Destination / Time:</span>
-                <span className="text-brass">
-                  {confirmed.isLive 
-                    ? `${confirmed.preferred_date} at ${confirmed.preferred_time}` 
-                    : 'Dispatched to email within 24–48 hrs'}
+                <span className="text-slate-400">Service:</span>
+                <span className="font-semibold text-slate-200">{confirmed.service_title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Delivery / Schedule:</span>
+                <span className="font-semibold text-slate-200">
+                  {confirmed.isOffline 
+                    ? 'Email Delivery within 24–48 hrs' 
+                    : `${confirmed.preferred_date} at ${confirmed.preferred_time}`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Client Mail:</span>
-                <span className="text-bone">{confirmed.email}</span>
+                <span className="text-slate-400">Amount Paid:</span>
+                <span className="font-semibold text-emerald-400">{confirmed.price}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Amount Paid:</span>
-                <span className="text-brass font-bold">{confirmed.price}</span>
-              </div>
-            </div>
-
-            {/* Preparation Points (Section 10) */}
-            <div className="space-y-1.5 text-xs text-smoke font-sans border-t border-charcoal pt-3">
-              <span className="font-mono text-[9px] text-brass uppercase tracking-widest block">
-                PREPARATION PROTOCOL:
-              </span>
-              <p className="text-[11px]">• Clarify the exact decision or loop you want dissected.</p>
-              <p className="text-[11px]">• Write down facts, dates, and names before the session begins.</p>
-              <p className="text-[11px]">• Check your email inbox for your receipt and calendar access link.</p>
             </div>
 
             <button
               onClick={() => setConfirmed(null)}
-              className="w-full py-3 rounded-sm bg-brass text-void font-cinzel font-bold text-xs uppercase tracking-[0.2em] hover:bg-brass-light transition-all"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-wider hover:brightness-110"
             >
-              CLOSE & RETURN TO ARCHIVE
+              Done
             </button>
-
           </div>
         </div>
       )}
@@ -518,5 +534,4 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     </section>
   );
 }
-
 
