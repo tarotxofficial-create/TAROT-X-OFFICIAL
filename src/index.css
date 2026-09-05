@@ -4,37 +4,43 @@
 
 @layer base {
   :root {
-    --color-gold-glow: #d4af37;
-    --color-violet-glow: #8a2be2;
+    --color-void: #050508;
+    --color-steel: #1F2833;
+    --color-cyan: #66FCF1;
+    --color-amber: #C5A059;
   }
   
   body {
-    background-color: #06070a;
-    color: #e2e8f0;
+    background-color: #050508;
+    color: #F8F9FA;
     overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
-  /* Custom Luxury Scrollbar */
+  /* Precision Terminal Scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0d14;
+    background: #050508;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 4px;
-    border: 1px solid #d4af3740;
+    background: #1F2833;
+    border-radius: 2px;
+    border: 1px solid rgba(102, 252, 241, 0.2);
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #c69222;
+    background: #66FCF1;
   }
 }
 
-/* 3D Card Flip Utilities */
+/* 3D Spatial Transforms */
 .perspective-1000 {
   perspective: 1000px;
+}
+.perspective-2000 {
+  perspective: 2000px;
 }
 .transform-style-3d {
   transform-style: preserve-3d;
@@ -47,78 +53,66 @@
   transform: rotateY(180deg);
 }
 
-/* Luxury Glass & Glow Effects */
-.glass-panel {
-  background: rgba(15, 20, 32, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.05);
+/* Brutalist Sci-Fi Panels */
+.monolith-panel {
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(31, 40, 51, 0.9);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.glass-panel-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.monolith-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.glass-panel-hover:hover {
-  border-color: rgba(212, 175, 55, 0.45);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+.monolith-panel-hover:hover {
+  border-color: rgba(102, 252, 241, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 25px rgba(102, 252, 241, 0.15);
   transform: translateY(-2px);
 }
 
-.gold-gradient-text {
-  background: linear-gradient(135deg, #fff7d6 0%, #ecc86b 40%, #c69222 70%, #f4de9e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Cyan Vector Glow Effects */
+.cyan-glow-text {
+  text-shadow: 0 0 12px rgba(102, 252, 241, 0.6), 0 0 24px rgba(102, 252, 241, 0.3);
 }
 
-.violet-gradient-text {
-  background: linear-gradient(135deg, #f3e8ff 0%, #c084fc 40%, #7e22ce 80%, #e879f9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.amber-glow-text {
+  text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
 }
 
-.mystic-border-glow {
+.cyan-wireframe-button {
   position: relative;
+  background: rgba(5, 5, 8, 0.8);
+  border: 1px solid #66FCF1;
+  color: #66FCF1;
+  box-shadow: 0 0 15px rgba(102, 252, 241, 0.25), inset 0 0 10px rgba(102, 252, 241, 0.1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.mystic-border-glow::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(212,175,55,0.6), rgba(138,43,226,0.3), rgba(212,175,55,0.1));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.cyan-wireframe-button:hover {
+  background: #66FCF1;
+  color: #050508;
+  box-shadow: 0 0 30px rgba(102, 252, 241, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
 }
 
-/* Card Hologram Foil Effect */
-.card-hologram {
-  position: relative;
-  overflow: hidden;
-}
-.card-hologram::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+/* Subtle Scanline CRT Overlay */
+.scanline-overlay {
   background: linear-gradient(
-    60deg,
-    transparent 30%,
-    rgba(212, 175, 55, 0.12) 40%,
-    rgba(147, 51, 234, 0.15) 50%,
-    rgba(6, 182, 212, 0.12) 60%,
-    transparent 70%
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.3)
   );
-  transform: rotate(30deg);
+  background-size: 100% 4px;
   pointer-events: none;
-  animation: shimmer 6s infinite linear;
 }
 
-@keyframes shimmer {
-  0% { transform: translateY(-100%) rotate(30deg); }
-  100% { transform: translateY(100%) rotate(30deg); }
+/* Laser Grid Texture */
+.laser-grid {
+  background-image: 
+    linear-gradient(to right, rgba(102, 252, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(102, 252, 241, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
+
