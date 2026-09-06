@@ -13,8 +13,8 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex items-center space-x-3 text-center md:text-left">
-            <div className="w-8 h-8 rounded-lg bg-obsidian-900 border border-gold-500/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-gold-400" />
+            <div className="w-8 h-8 rounded-lg bg-obsidian-900 border border-gold-500/30 overflow-hidden flex items-center justify-center">
+              <img src="/logo.jpg" alt="Tarot X Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <span className="font-cinzel text-base font-bold gold-gradient-text tracking-wider">

@@ -25,8 +25,8 @@ export default function Navbar({ onBookClick }) {
           
           {/* Logo */}
           <a href="#" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-obsidian-900 border border-gold-500/40 flex items-center justify-center shadow-lg group-hover:border-gold-400 transition-all">
-              <Sparkles className="w-5 h-5 text-gold-400" />
+            <div className="w-10 h-10 rounded-xl bg-obsidian-900 border border-gold-500/40 overflow-hidden flex items-center justify-center shadow-lg group-hover:border-gold-400 transition-all">
+              <img src="/logo.jpg" alt="Tarot X Logo" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             </div>
             <div>
               <span className="font-cinzel text-lg font-bold tracking-wider gold-gradient-text">

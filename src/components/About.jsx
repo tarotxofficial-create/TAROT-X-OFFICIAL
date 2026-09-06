@@ -39,7 +39,7 @@ export default function About() {
           <div className="md:col-span-5 flex justify-center">
             <div className="relative w-72 h-96 rounded-3xl overflow-hidden border-2 border-gold-500/40 p-2 bg-obsidian-900 shadow-2xl shadow-gold-500/10">
               <img
-                src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80"
+                src="/logo.jpg"
                 alt="X — The Anonymous Rationalist"
                 className="w-full h-full object-cover rounded-2xl brightness-90 contrast-110"
               />
