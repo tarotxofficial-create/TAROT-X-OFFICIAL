@@ -33,8 +33,9 @@ export default function App() {
       {/* 1. WebGL 3D Zero-G Spatial Canvas (Fixed in Background) */}
       <AntigravityCanvas />
 
-      {/* 2. Deep Space Contrast Vignette (Ensures 100% crystal clear foreground text contrast) */}
-      <div className="fixed inset-0 bg-gradient-to-b from-obsidian-950/70 via-obsidian-950/50 to-obsidian-950/75 pointer-events-none z-10" />
+      {/* 2. Deep Space Contrast Vignette (Calibrated to let 3D realms pop while keeping crystal clear text contrast) */}
+      <div className="fixed inset-0 bg-gradient-to-b from-obsidian-950/45 via-obsidian-950/20 to-obsidian-950/60 pointer-events-none z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(5,5,8,0.75)_100%)] pointer-events-none z-10" />
 
       {/* 3. Atmospheric CRT Scanline & Grain Texture */}
       <div className="fixed inset-0 scanline-overlay pointer-events-none z-10 opacity-15" />
