@@ -12,20 +12,20 @@ export default function Hero({ onBookClick, onExploreServices }) {
         {/* Prestige Tag */}
         <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-obsidian-900 border border-gold-500/30 text-gold-300 text-xs tracking-wider uppercase font-semibold shadow-inner">
           <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-          <span>Professional Tarot Readings & Spiritual Guidance</span>
+          <span>“It isn't magic. It's a model.” — The Anonymous Rationalist</span>
         </div>
 
         {/* Hero Title */}
         <h1 className="font-cinzel text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.15]">
-          Clarity, Direction & Insight for <br />
+          I Don't Predict Your Future. <br />
           <span className="gold-gradient-text">
-            Life's Pivotal Crossroads
+            I Show What Your Habits Predict.
           </span>
         </h1>
 
         {/* Narrative Subtitle */}
         <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto">
-          Welcome to Tarot X Official. Choose between an in-depth offline report delivered directly to your email for <strong className="text-gold-300 font-semibold">₹99</strong>, or an interactive 30-minute 1-to-1 live video reading on Zoom for <strong className="text-gold-300 font-semibold">₹999</strong>.
+          “People don't need hope. They need clarity.” No prophecy. No divine authority. Just ruthless pattern recognition to expose the decisions you are avoiding. Choose your analysis below:
         </p>
 
         {/* CTAs */}
@@ -51,15 +51,15 @@ export default function Hero({ onBookClick, onExploreServices }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-10 border-t border-slate-800/80 max-w-2xl mx-auto">
           <div className="flex items-center justify-center space-x-2.5 text-xs text-slate-300">
             <Star className="w-4 h-4 text-gold-400 fill-gold-400" />
-            <span>1,200+ Confirmed Readings</span>
+            <span>1,200+ Pattern Analyses</span>
           </div>
           <div className="flex items-center justify-center space-x-2.5 text-xs text-slate-300">
             <Shield className="w-4 h-4 text-gold-400" />
-            <span>100% Confidential Guidance</span>
+            <span>100% Anonymous & Confidential</span>
           </div>
           <div className="flex items-center justify-center space-x-2.5 text-xs text-slate-300">
             <HeartHandshake className="w-4 h-4 text-gold-400" />
-            <span>₹99 Email Report · ₹999 Live Zoom</span>
+            <span>₹99 Email Dossier · ₹999 Live Zoom</span>
           </div>
         </div>
 

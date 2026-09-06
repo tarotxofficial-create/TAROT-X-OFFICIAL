@@ -6,24 +6,24 @@ export default function FAQ() {
 
   const faqs = [
     {
-      q: 'How does the ₹99 Offline Email Reading Report work?',
-      a: 'When ordering the ₹99 service, you submit your questions and details through the booking form. No live call is required. We draw your cards with sacred focus and deliver a comprehensive written reading dossier along with high-definition photographs of your card spread directly to your email within 24–48 hours.'
+      q: 'How does the ₹99 Offline Analysis Report work?',
+      a: '“Tell me what happened. Not what you think it means.” You submit your situation and specific questions through the form. No live call is required. X maps your situation against archetypal patterns and probabilities, delivering a comprehensive written diagnostic report with high-resolution card spread photos directly to your email within 24–48 hours.'
     },
     {
-      q: 'How does the ₹999 1-to-1 Live Zoom Reading work?',
-      a: 'You select your preferred date and time slot via our integrated Calendly scheduler right in the booking form. Calendly automatically generates your private Zoom meeting link, passcode, and calendar invite. During the 30-minute video session, we explore your patterns interactively with real-time card draws.'
+      q: 'How does the ₹999 1-to-1 Live Zoom Consultation work?',
+      a: '“I\'m just making it harder for you to lie to yourself.” You select your preferred time slot on our integrated calendar. During the private 30-minute video session, X uses the cards as a structured prompt to interrogate your assumptions, expose behavioral contradictions, and map probable outcomes in real time.'
     },
     {
-      q: 'What details do I need to provide for the ₹99 Offline Report?',
-      a: 'You simply provide your name, the email address where you want the report sent, your primary area of focus (Love, Career, Life Path, etc.), and 1 to 3 specific questions or situation details. You can also optionally include your date of birth or zodiac sign to help align energies.'
+      q: 'What details should I provide for the ₹99 Offline Report?',
+      a: 'Provide your name, email, primary area of concern, and 1 to 3 concrete questions. Focus on observable behaviors, recurring patterns, and real choices rather than vague wishes. The clearer your facts, the sharper the probability model.'
     },
     {
-      q: 'Can I ask follow-up questions during the 30-minute Live Zoom session?',
-      a: 'Yes, absolutely! The live 30-minute Zoom session is completely interactive. You can converse freely, ask follow-up questions as new cards are drawn, and explore multiple dimensions of your life.'
+      q: 'Will you predict my exact future or tell me what to do?',
+      a: '“I don\'t predict your future. I show you what your habits are already predicting for you.” Tarot cards do not make decisions—you do. X does not claim supernatural certainty or divine authority. You receive conditional probabilities based on your current trajectory, identifying the single variable that could alter the outcome.'
     },
     {
-      q: 'Will you tell me bad news or predictive doom?',
-      a: 'Never. We practice ethical, empowering intuitive guidance. The cards highlight underlying energy currents, psychological patterns, and potential trajectories so you can make empowered decisions, never fear-based predictions.'
+      q: 'Is this fortune telling or psychic divination?',
+      a: '“It isn\'t magic. It\'s a model.” X is an atheist rationalist who views tarot as a compact symbolic interface for human psychology, probability, and decision theory. There is no mystical jargon, no doom prophecies, and no ritual dependency. You come for answers; you leave with perspective.'
     }
   ];
 

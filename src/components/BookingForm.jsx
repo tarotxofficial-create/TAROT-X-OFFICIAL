@@ -35,7 +35,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
     serviceId: initialService.id,
     
     // Offline Reading specific details
-    focusArea: 'Love & Relationships',
+    focusArea: 'Relationship Dynamics & Patterns',
     birthDetails: '',
     offlineQuestions: '',
     
@@ -283,7 +283,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
             Book Your Reading
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
-            Direct Zoom scheduling via Calendly with instant cryptographic payment verification. Unpaid reservations are automatically released.
+            “You don't need a sign. You need to make the decision you already know you’re avoiding.” Secure your session below:
           </p>
         </div>
 
@@ -340,10 +340,10 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 <Mail className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <span className="font-cinzel text-gold-300 font-bold uppercase tracking-wider block">
-                    Offline Reading Report — ₹99
+                    Offline Pattern Report — ₹99
                   </span>
                   <p className="text-slate-300 leading-relaxed">
-                    No live call needed. Share your questions and details below. The reader will draw your spread with sacred focus, and your detailed written report with card photos will be sent directly to your email within <strong>24–48 hours</strong>.
+                    No live call needed. Strip away your preferred story and share the facts. X analyzes your spread through pattern recognition, delivering a comprehensive diagnostic dossier to your email within <strong>24–48 hours</strong>.
                   </p>
                 </div>
               </>
@@ -360,7 +360,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                     </span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">
-                    A private 30-minute face-to-face video consultation. Pick your slot on the integrated Calendly scheduler below. <strong>Slots are locked only upon payment confirmation</strong>; if payment is incomplete or dismissed, the reservation is auto-deleted.
+                    A private 30-minute face-to-face video consultation. Pick your slot on the integrated Calendly scheduler below. <strong>Slots are temporarily held and locked only upon payment confirmation</strong>; unpaid reservations are automatically released.
                   </p>
                 </div>
               </>
@@ -455,7 +455,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               <div className="space-y-5 pt-2 border-t border-slate-800">
                 <div className="flex items-center space-x-2 text-gold-400 text-xs font-cinzel uppercase tracking-wider">
                   <FileText className="w-4 h-4" />
-                  <span>2. Details Needed for Your Reading</span>
+                  <span>2. Details Needed for Your Analysis</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -469,24 +469,24 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                       onChange={(e) => setFormData({ ...formData, focusArea: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 focus:border-gold-400 outline-none"
                     >
-                      <option value="Love & Relationships">Love & Relationships</option>
-                      <option value="Career & Financial Growth">Career & Financial Growth</option>
-                      <option value="Life Path & Soul Purpose">Life Path & Soul Purpose</option>
-                      <option value="Urgent Decision / Crossroads">Urgent Decision / Crossroads</option>
-                      <option value="General Intuitive Overview">General Intuitive Overview</option>
+                      <option value="Relationship Dynamics & Patterns">Relationship Dynamics & Attachment Patterns</option>
+                      <option value="Career, Risk & Decision Dilemmas">Career, Risk & Decision Dilemmas</option>
+                      <option value="Repeated Obstacle or Avoidance Loop">Repeated Obstacle or Avoidance Loop</option>
+                      <option value="Strategic Crossroads & Probability">Strategic Crossroads & Probability</option>
+                      <option value="Comprehensive Pattern Analysis">Comprehensive Pattern Analysis</option>
                     </select>
                   </div>
 
                   {/* Birth Details / Sun Sign */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
-                      Date of Birth / Zodiac (Optional)
+                      Date of Birth (Optional)
                     </label>
                     <input
                       type="text"
                       value={formData.birthDetails}
                       onChange={(e) => setFormData({ ...formData, birthDetails: e.target.value })}
-                      placeholder="e.g. 14 Aug 1995 or Leo (helps tune into energies)"
+                      placeholder="e.g. 14 Aug 1995 (used strictly for archetypal & numerological indexing)"
                       className="w-full px-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
                     />
                   </div>
@@ -495,7 +495,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 {/* Specific Questions for Reading */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-cinzel uppercase tracking-wider text-gold-400 font-bold flex items-center justify-between">
-                    <span>Questions & Situation Context for the Reading *</span>
+                    <span>Situation Context & Specific Questions *</span>
                     <span className="text-[10px] text-slate-400 font-normal">1 to 3 core questions</span>
                   </label>
                   <div className="relative">
@@ -504,12 +504,12 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                       required
                       value={formData.offlineQuestions}
                       onChange={(e) => setFormData({ ...formData, offlineQuestions: e.target.value })}
-                      placeholder="Please share 1–3 specific questions or describe your situation in detail. Include names or contexts if asking about a relationship or career decision..."
+                      placeholder="“Tell me what happened. Not what you think it means.” Describe the recurring situation, the choices you're facing, or the contradiction you're trying to resolve..."
                       className="w-full p-4 rounded-xl bg-obsidian-900 border border-gold-500/40 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none leading-relaxed"
                     />
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    💡 The more context you provide, the deeper and more precise your written tarot report will be.
+                    💡 “Hope is not evidence.” Concrete facts yield sharper, more actionable probability models.
                   </p>
                 </div>
               </div>
@@ -640,7 +640,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                 {/* Topics / Notes */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-cinzel uppercase tracking-wider text-slate-300">
-                    Topics or Questions for the Zoom Call (Optional)
+                    Topics or Decisions for the Live Zoom Call (Optional)
                   </label>
                   <div className="relative">
                     <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -648,7 +648,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                       rows={3}
                       value={formData.zoomNotes}
                       onChange={(e) => setFormData({ ...formData, zoomNotes: e.target.value })}
-                      placeholder="Share what situation, decisions, or crossroads you would like to explore together during our 30-minute live call..."
+                      placeholder="Share the pattern, recurring decision, or dilemma you want to interrogate during our 30-minute live call..."
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-obsidian-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-gold-400 outline-none"
                     />
                   </div>
@@ -669,9 +669,9 @@ export default function BookingForm({ selectedService, onServiceChange }) {
                   {submitting 
                     ? 'Verifying Payment Confirmation...' 
                     : isOffline
-                      ? `Pay ₹99 & Order Offline Report`
+                      ? `Pay ₹99 & Order Analysis Dossier`
                       : calendlyScheduled
-                        ? `Verify ₹999 Payment & Lock Calendly Slot`
+                        ? `Verify ₹999 Payment & Lock Live Session`
                         : `Pay ₹999 & Confirm 30-Min Zoom Session`}
                 </span>
               </button>
@@ -709,7 +709,7 @@ export default function BookingForm({ selectedService, onServiceChange }) {
 
             <div className="space-y-1">
               <span className="text-xs font-cinzel uppercase tracking-widest text-gold-400 font-bold">
-                ✦ Payment Verified & Session Confirmed ✦
+                ✦ Payment Verified & Analysis Confirmed ✦
               </span>
               <h3 className="font-cinzel text-xl font-bold text-slate-100">
                 Thank You, {confirmed.name}
@@ -717,11 +717,11 @@ export default function BookingForm({ selectedService, onServiceChange }) {
               <p className="text-xs text-slate-300 leading-relaxed">
                 {confirmed.isOffline ? (
                   <>
-                    Your reading details have been received and payment is verified. Your offline report and photographs will be delivered directly to <strong>{confirmed.email}</strong> within <strong>24–48 hours</strong>.
+                    Your situation details have been received and payment is verified. Your written pattern dossier and card photographs will be delivered directly to <strong>{confirmed.email}</strong> within <strong>24–48 hours</strong>.
                   </>
                 ) : (
                   <>
-                    Your 30-minute live Zoom session is verified and locked in! Calendly has generated your private meeting link and dispatched a calendar invitation to <strong>{confirmed.email}</strong>.
+                    Your 30-minute live consultation is locked in. Calendly has generated your private Zoom room and sent your calendar invite to <strong>{confirmed.email}</strong>.
                   </>
                 )}
               </p>

@@ -255,8 +255,11 @@ export default function Testimonials() {
             ))}
           </div>
           <h2 className="font-cinzel text-2xl sm:text-3xl font-bold gold-gradient-text tracking-wider">
-            1000+ Happy Clients
+            “You Come for Answers. You Leave With Perspective.”
           </h2>
+          <p className="text-xs text-slate-400 font-sans mt-1">
+            Over 1,000 verified clients who chose clarity over comforting lies
+          </p>
         </div>
       </div>
 

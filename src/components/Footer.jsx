@@ -21,7 +21,7 @@ export default function Footer() {
                 TAROT X OFFICIAL
               </span>
               <p className="text-[11px] text-slate-500">
-                Intuitive Readings & Spiritual Consulting
+                Pattern Recognition & Probability Analysis
               </p>
             </div>
           </div>
@@ -49,7 +49,7 @@ export default function Footer() {
             © {new Date().getFullYear()} TAROT X OFFICIAL. All rights reserved.
           </p>
           <p className="text-[11px]">
-            Readings are intended for intuitive reflection and self-guidance.
+            Readings are structured analytical models for decision clarity and self-examination. No supernatural claims.
           </p>
         </div>
 

@@ -5,38 +5,38 @@ export const READING_SERVICES = [
   {
     id: 'offline_report',
     type: 'offline',
-    title: 'Offline Reading Report',
+    title: 'Offline Pattern Report',
     duration: 'Sent via Email (24–48 Hrs)',
     price: '₹99',
     inrAmount: 99,
     popular: false,
-    badge: 'Fast & Convenient',
-    tagline: 'Personalized written tarot dossier sent directly to your email inbox.',
-    description: 'Provide your questions and details. Receive a comprehensive, deeply analyzed written tarot report and high-resolution card spread photographs delivered straight to your email.',
+    badge: 'Fast & Direct',
+    tagline: '“Tell me what happened. Not what you think it means.”',
+    description: 'Submit your situation and questions. Receive a written diagnostic dossier exposing the behavioral loops, probabilities, and variables at play.',
     deliverables: [
-      'Comprehensive Written Tarot Report (Email/PDF)',
+      'Written Pattern Diagnostic Dossier (Email/PDF)',
       'High-Resolution Photographs of Your Card Spread',
-      'Targeted Answers to Your 1–3 Core Life Questions',
-      'Actionable Intuitive Guidance & Remedies',
+      'Targeted Analysis of 1–3 Core Situations or Decisions',
+      'Probability Mapping & Variable Identification (No Fluff)',
       'Delivered Directly to Your Email within 24–48 Hours'
     ]
   },
   {
     id: 'live_zoom_30min',
     type: 'live_zoom',
-    title: '1-to-1 Live Zoom Video Reading',
+    title: '1-to-1 Live Zoom Reading',
     duration: '30 Minutes Live Call',
     price: '₹999',
     inrAmount: 999,
     popular: true,
-    badge: 'Most Popular · Live Session',
-    tagline: 'Private face-to-face consultation with live interactive card draws.',
-    description: 'A dedicated 30-minute private 1-on-1 session on Zoom. Discuss your situation in depth, ask real-time follow-up questions, and explore multi-layered card spreads together live.',
+    badge: 'Most Popular · Live Interrogation',
+    tagline: '“I\'m just making it harder for you to lie to yourself.”',
+    description: 'A private 30-minute face-to-face video interrogation. Deconstruct your situation in real time, test your assumptions, and confront what you are avoiding.',
     deliverables: [
       'Private 30-Minute Live 1-on-1 Zoom Consultation',
-      'Live Interactive Multi-Card Spreads & Intuitive Q&A',
-      'Direct Real-Time Clarification on Love, Career, or Crossroads',
-      'High-Definition Photo of Cards Sent Post-Session',
+      'Real-Time Interactive Spread & Pattern Interrogation',
+      'Unfiltered Clarity on Relationships, Career, or Crossroads',
+      'Identification of Hidden Costs, Drivers & Blind Spots',
       'Instant Calendar Invite & Secure Zoom Link via Email'
     ]
   }
@@ -57,7 +57,7 @@ export default function Services({ onSelectService }) {
             Reading Packages & Pricing
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            Choose between a swift, thorough offline written report delivered to your email or an interactive 30-minute live 1-to-1 video reading on Zoom.
+            “The future is not fixed. But neither is it impressed by your intentions.” Choose the diagnostic tier for your decision:
           </p>
         </div>
 

@@ -33,7 +33,7 @@ export default function Navbar({ onBookClick }) {
                 TAROT X
               </span>
               <span className="text-[10px] uppercase font-mono tracking-widest block text-slate-400">
-                Intuitive Readings & Portfolio
+                Pattern Recognition & Analysis
               </span>
             </div>
           </a>
