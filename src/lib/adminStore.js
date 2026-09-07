@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured, dispatchAdminSignal } from './supabase';
 import { sendNewsletterAlert } from './emailService';
 
 const BOOKINGS_STORAGE_KEY = 'tarotx_official_bookings';
@@ -335,7 +335,10 @@ export async function updateBookingStatus(id, newStatus, readerNotes = null) {
     // 2. Sync to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       const payload = { status: newStatus };
-      if (readerNotes !== null) payload.notes = readerNotes;
+      if (readerNotes !== null) {
+        payload.notes = readerNotes;
+        payload.reader_notes = readerNotes;
+      }
       await supabase.from('tarot_bookings').update(payload).eq('id', id);
     }
 
@@ -381,15 +384,21 @@ export async function addManualBooking(bookingData) {
         phone: newBooking.phone,
         service_title: newBooking.service_title,
         price: newBooking.price,
+        inr_amount: newBooking.inrAmount,
         format: newBooking.format,
         preferred_date: newBooking.preferred_date,
         preferred_time: newBooking.preferred_time,
         timezone: newBooking.timezone,
+        focus_area: newBooking.focusArea,
         notes: newBooking.notes,
+        reader_notes: newBooking.reader_notes,
         payment_id: newBooking.payment_id,
         payment_status: newBooking.payment_status,
         status: newBooking.status
       }]);
+
+      // Broadcast new booking to all devices (Android app + web dashboard)
+      await dispatchAdminSignal('NEW_BOOKING_ALERT', { booking: newBooking });
     }
 
     return { success: true, booking: newBooking };

@@ -52,7 +52,13 @@ import {
   clearAdminSession, 
   setCustomPasscode 
 } from '../../lib/adminStore';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { 
+  isSupabaseConfigured,
+  dispatchAdminSignal,
+  subscribeToAdminSignals,
+  subscribeToTarotBookings,
+  subscribeToTarotNewsletter
+} from '../../lib/supabase';
 import { sendResendTestEmail } from '../../lib/emailService';
 import MobileAdminApp from './MobileAdminApp';
 
@@ -125,34 +131,37 @@ export default function AdminDashboard({ onExit }) {
     }
   };
 
-  // Meeting Reminders & Popup Alerts Facility
+  // Meeting Reminders & Popup Alerts Facility (Synchronized across Web & Mobile App)
   const [reminderNotice, setReminderNotice] = useState(null);
   const [simulatedPopup, setSimulatedPopup] = useState(null);
 
-  const handleTestMeetingReminder = (seconds = 5) => {
+  // Trigger test meeting reminder on THIS device AND ALL connected devices (Web & Android App)
+  const handleTestMeetingReminder = async (seconds = 5) => {
+    const payload = {
+      delaySeconds: seconds,
+      clientName: 'Aarav Mehta (Cross-Device Test)',
+      serviceTitle: '1-to-1 Live Zoom Reading',
+      scheduledTime: '18:00 IST (Starting in 5 mins)',
+      phone: '+91 98201 44521',
+      focusArea: 'Career & High-Stakes Venture Strategy. Hesitation loops around equity split.'
+    };
+
+    setReminderNotice(`🔮 Broadcasting meeting reminder alert (${seconds}s) to web & mobile app simultaneously...`);
+
+    // 1. Dispatch over cloud real-time channel
+    await dispatchAdminSignal('MEETING_REMINDER_TEST', payload);
+
+    // 2. If running locally on native Android bridge, arm native alarm directly too
     if (typeof window !== 'undefined' && window.AndroidReminders?.testFiveMinuteReminder) {
       window.AndroidReminders.testFiveMinuteReminder(seconds);
-      setReminderNotice(`🔮 Test meeting reminder scheduled for ${seconds} seconds! Lock your phone or exit app now.`);
-    } else {
-      setReminderNotice(`🔮 [Browser Emulation] Alarm armed for ${seconds} seconds... Screen simulation incoming!`);
-      setTimeout(() => {
-        setSimulatedPopup({
-          type: 'MEETING_REMINDER',
-          client_name: 'Aarav Mehta (Test)',
-          service_name: '1-to-1 Live Zoom Reading',
-          scheduled_time: '18:00 IST (Starting in 5 mins)',
-          phone: '+91 98201 44521',
-          focusArea: 'Career & High-Stakes Venture Strategy. Hesitation loops around equity split.'
-        });
-        setReminderNotice(null);
-      }, seconds * 1000);
     }
   };
 
-  const handleTestNewBookingPopup = () => {
+  // Trigger test new booking popup on THIS device AND ALL connected devices (Web & Android App)
+  const handleTestNewBookingPopup = async () => {
     const sampleBooking = {
       id: `test_${Date.now()}`,
-      name: 'Pooja Ramanathan (Test)',
+      name: 'Pooja Ramanathan (Cross-Device Alert)',
       service_title: '1-to-1 Live Zoom Reading',
       inrAmount: 999,
       preferred_date: new Date().toISOString().split('T')[0],
@@ -161,19 +170,14 @@ export default function AdminDashboard({ onExit }) {
       focusArea: 'Relationship Dynamics & Career Timing'
     };
 
+    setReminderNotice('✨ Broadcasting new booking alert to web & mobile app simultaneously...');
+
+    // 1. Dispatch over cloud real-time channel
+    await dispatchAdminSignal('NEW_BOOKING_TEST', { booking: sampleBooking });
+
+    // 2. If running locally on native Android bridge, trigger native popup directly too
     if (typeof window !== 'undefined' && window.AndroidReminders?.testNewBookingAlert) {
       window.AndroidReminders.testNewBookingAlert(JSON.stringify(sampleBooking));
-      setReminderNotice('✨ New booking alert triggered on phone!');
-    } else {
-      setSimulatedPopup({
-        type: 'NEW_BOOKING',
-        client_name: sampleBooking.name,
-        service_name: sampleBooking.service_title,
-        scheduled_time: `${sampleBooking.preferred_date} at ${sampleBooking.preferred_time}`,
-        phone: sampleBooking.phone,
-        inrAmount: sampleBooking.inrAmount,
-        focusArea: sampleBooking.focusArea
-      });
     }
   };
 
@@ -225,6 +229,78 @@ export default function AdminDashboard({ onExit }) {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Subscribe to real-time administrative signals & database changes (Web <-> Android App connection)
+  useEffect(() => {
+    const unsubscribeSignals = subscribeToAdminSignals((signal) => {
+      console.log('⚡ Cross-Device Admin Signal Received:', signal);
+      if (!signal || !signal.signal_type) return;
+
+      const isNative = typeof window !== 'undefined' && window.AndroidReminders?.isNativeAvailable?.();
+
+      if (signal.signal_type === 'MEETING_REMINDER_TEST') {
+        const payload = signal.payload || {};
+        const seconds = payload.delaySeconds || 5;
+
+        // If on Android app, trigger native system alarm/countdown
+        if (isNative && window.AndroidReminders?.testFiveMinuteReminder) {
+          window.AndroidReminders.testFiveMinuteReminder(seconds);
+        }
+
+        // Display notice and popup on screen
+        const originName = signal.sender === 'android_app' ? 'Mobile App' : 'Web Admin';
+        setReminderNotice(`🔮 Alert received live from ${originName}! Arming ${seconds}s countdown...`);
+        setTimeout(() => {
+          setSimulatedPopup({
+            type: 'MEETING_REMINDER',
+            client_name: payload.clientName || 'Aarav Mehta (Test)',
+            service_name: payload.serviceTitle || '1-to-1 Live Zoom Reading',
+            scheduled_time: payload.scheduledTime || '18:00 IST (Starting in 5 mins)',
+            phone: payload.phone || '+91 98201 44521',
+            focusArea: payload.focusArea || 'Career & High-Stakes Venture Strategy. Hesitation loops around equity split.'
+          });
+          setReminderNotice(null);
+        }, isNative ? seconds * 1000 : 800);
+      } 
+      else if (signal.signal_type === 'NEW_BOOKING_ALERT' || signal.signal_type === 'NEW_BOOKING_TEST') {
+        const booking = signal.payload?.booking || {};
+
+        // If on Android app, wake screen & show native popup!
+        if (isNative && window.AndroidReminders?.testNewBookingAlert) {
+          window.AndroidReminders.testNewBookingAlert(JSON.stringify(booking));
+        }
+
+        // Show popup in UI (Web + App)
+        const originName = signal.sender === 'android_app' ? 'Mobile App' : 'Web Admin';
+        setSimulatedPopup({
+          type: 'NEW_BOOKING',
+          client_name: booking.name || 'New Client',
+          service_name: booking.service_title || 'Tarot Consultation',
+          scheduled_time: `${booking.preferred_date || 'Today'} at ${booking.preferred_time || 'Scheduled Slot'}`,
+          phone: booking.phone || '',
+          inrAmount: booking.inrAmount || booking.inr_amount || (booking.price?.includes('999') ? 999 : 99),
+          focusArea: booking.focusArea || booking.focus_area || 'Tarot Assessment'
+        });
+        setReminderNotice(`✨ New booking alert received live from ${originName}!`);
+      }
+    });
+
+    const unsubscribeBookings = subscribeToTarotBookings((payload) => {
+      console.log('⚡ Tarot bookings database changed. Synchronizing...', payload);
+      loadData();
+    });
+
+    const unsubscribeNewsletter = subscribeToTarotNewsletter((payload) => {
+      console.log('⚡ Newsletter subscribers changed. Synchronizing...', payload);
+      loadData();
+    });
+
+    return () => {
+      if (unsubscribeSignals) unsubscribeSignals();
+      if (unsubscribeBookings) unsubscribeBookings();
+      if (unsubscribeNewsletter) unsubscribeNewsletter();
+    };
   }, []);
 
   const metrics = calculateRevenueMetrics(bookings);
