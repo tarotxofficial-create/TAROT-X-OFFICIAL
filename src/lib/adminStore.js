@@ -1,5 +1,5 @@
-// TAROT X OFFICIAL — Executive Admin Store & Data Engine
 import { supabase, isSupabaseConfigured } from './supabase';
+import { sendNewsletterAlert } from './emailService';
 
 const BOOKINGS_STORAGE_KEY = 'tarotx_official_bookings';
 const NEWSLETTER_STORAGE_KEY = 'tarotx_official_newsletter';
@@ -490,6 +490,10 @@ export async function subscribeNewsletter(email, source = 'website_footer') {
         source,
         status: 'subscribed'
       }]);
+    }
+
+    if (!existing) {
+      sendNewsletterAlert(newSub).catch(e => console.warn('Newsletter alert email error:', e));
     }
 
     return { success: true, subscriber: newSub, isNew: !existing };

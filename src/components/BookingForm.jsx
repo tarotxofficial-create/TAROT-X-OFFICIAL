@@ -24,6 +24,7 @@ import { submitBooking } from '../lib/supabase';
 import { initiateRazorpayCheckout, verifyPaymentWithServer } from '../lib/razorpay';
 import { READING_SERVICES } from './Services';
 import { DEFAULT_CALENDLY_URL, buildCalendlyUrl, openCalendlyPopup, cancelCalendlyBooking } from '../lib/calendly';
+import { sendBookingAlert } from '../lib/emailService';
 
 export default function BookingForm({ selectedService, onServiceChange }) {
   const initialService = selectedService || READING_SERVICES[0];
@@ -230,6 +231,9 @@ export default function BookingForm({ selectedService, onServiceChange }) {
           setSubmitting(false);
 
           if (result.success) {
+            // Trigger Resend email notification alert in background
+            sendBookingAlert({ ...payload, id: result.booking?.id }).catch(e => console.warn('Email notice:', e));
+
             setConfirmed({
               ...result.booking,
               paymentId: paymentDetails.paymentId,

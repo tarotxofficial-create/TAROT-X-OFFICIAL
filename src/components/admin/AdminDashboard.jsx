@@ -30,7 +30,8 @@ import {
   Trash2,
   ExternalLink,
   ChevronRight,
-  HelpCircle
+  HelpCircle,
+  Send
 } from 'lucide-react';
 import { 
   fetchAdminBookings, 
@@ -48,6 +49,7 @@ import {
   setCustomPasscode 
 } from '../../lib/adminStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { sendResendTestEmail } from '../../lib/emailService';
 
 export default function AdminDashboard({ onExit }) {
   const [activeTab, setActiveTab] = useState('overview'); // overview, bookings, revenue, newsletter, settings
@@ -66,8 +68,36 @@ export default function AdminDashboard({ onExit }) {
   const [pinNotice, setPinNotice] = useState('');
   const [readerNotesDraft, setReaderNotesDraft] = useState('');
 
+  // Resend Test Email States
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
+
+  const handleSendTestEmail = async () => {
+    setEmailSending(true);
+    setEmailStatus(null);
+    try {
+      const res = await sendResendTestEmail();
+      if (res.ok) {
+        setEmailStatus({ 
+          success: true, 
+          message: `Verification email dispatched to tarotxofficial@gmail.com! (ID: ${res.messageId || 'ok'})` 
+        });
+      } else {
+        setEmailStatus({ 
+          success: false, 
+          message: res.error?.message || res.error || 'Failed to dispatch test email.' 
+        });
+      }
+    } catch (err) {
+      setEmailStatus({ success: false, message: err.message });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   // Clock
   const [currentTime, setCurrentTime] = useState(new Date());
+
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -1013,7 +1043,7 @@ export default function AdminDashboard({ onExit }) {
             </div>
 
             {/* Cloud & Integration Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Supabase Status */}
               <div className="bg-obsidian-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
@@ -1049,7 +1079,51 @@ export default function AdminDashboard({ onExit }) {
                   Razorpay Live Standard Checkout is active for real INR transactions on ₹99 Offline Dossiers and ₹999 Live Video Consultations.
                 </p>
               </div>
+
+              {/* Resend Email Gateway */}
+              <div className="bg-obsidian-900/80 border border-slate-800 rounded-2xl p-5 space-y-3 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-4 h-4 text-purple-400" />
+                      <span className="font-cinzel text-xs uppercase font-bold text-slate-200">Resend Email Gateway</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                      Connected
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automated serverless email dispatch via Resend SDK to <strong className="text-slate-200 font-mono">tarotxofficial@gmail.com</strong>.
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-obsidian-950 border border-slate-800 text-[10px] font-mono text-slate-400 space-y-0.5">
+                    <div>Sender: <span className="text-slate-300">onboarding@resend.dev</span></div>
+                    <div>Key: <span className="text-slate-500">re_T7hEpa7W...</span></div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSendTestEmail}
+                    disabled={emailSending}
+                    className="w-full py-2 px-3 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-200 hover:bg-purple-500/30 text-xs font-cinzel font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5 text-purple-400" />
+                    <span>{emailSending ? 'Dispatching...' : 'Send Test Email'}</span>
+                  </button>
+
+                  {emailStatus && (
+                    <div className={`mt-2 p-2 rounded-lg text-[11px] font-mono flex items-start space-x-1.5 ${
+                      emailStatus.success ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-red-500/10 text-red-300 border border-red-500/20'
+                    }`}>
+                      {emailStatus.success ? <CheckCircle2 className="w-3 h-3 shrink-0 mt-0.5" /> : <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />}
+                      <span className="leading-tight">{emailStatus.message}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
 
           </div>
         )}
