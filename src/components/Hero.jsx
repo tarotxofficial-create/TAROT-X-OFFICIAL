@@ -12,7 +12,7 @@ export default function Hero({ onBookClick, onExploreServices }) {
         {/* Prestige Tag */}
         <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-obsidian-900 border border-gold-500/30 text-gold-300 text-xs tracking-wider uppercase font-semibold shadow-inner">
           <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-          <span>“It isn't magic. It's a model.” — The Anonymous Rationalist</span>
+          <span>“It isn't magic. It's a model.” — The Mystery Reader</span>
         </div>
 
         {/* Hero Title */}

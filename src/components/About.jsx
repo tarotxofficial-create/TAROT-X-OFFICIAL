@@ -28,7 +28,7 @@ export default function About() {
             <span>The Reader & Philosophy</span>
           </div>
           <h2 className="font-cinzel text-3xl sm:text-4xl font-bold gold-gradient-text">
-            The Anonymous Rationalist
+            The Mystery Reader
           </h2>
         </div>
 
@@ -40,11 +40,11 @@ export default function About() {
             <div className="relative w-72 h-96 rounded-3xl overflow-hidden border-2 border-gold-500/40 p-2 bg-obsidian-900 shadow-2xl shadow-gold-500/10">
               <img
                 src="/reader.jpg"
-                alt="X — The Anonymous Rationalist"
+                alt="X — The Mystery Reader"
                 className="w-full h-full object-cover rounded-2xl brightness-90 contrast-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-obsidian-950/20 to-transparent flex flex-col justify-end p-5">
-                <span className="font-cinzel text-base font-bold text-gold-300">X — The Anonymous Reader</span>
+                <span className="font-cinzel text-base font-bold text-gold-300">X — The Mystery Reader</span>
                 <span className="text-xs text-slate-300">“A symbol is harder to worship than a biography.”</span>
               </div>
             </div>
