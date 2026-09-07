@@ -127,9 +127,16 @@ export default function AdminAuth({ onAuthenticated, onExit }) {
                 <span className="hover:text-slate-300 transition-colors">Remember on this device</span>
               </label>
 
-              <span className="text-[11px] font-mono text-gold-400/70">
-                Default: tarotx2026
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPasscode('tarotx2026');
+                  if (errorMsg) setErrorMsg('');
+                }}
+                className="text-[11px] font-mono text-gold-400/80 hover:text-gold-300 underline decoration-dotted underline-offset-2"
+              >
+                Auto-fill: tarotx2026
+              </button>
             </div>
 
             {/* Submit Button */}

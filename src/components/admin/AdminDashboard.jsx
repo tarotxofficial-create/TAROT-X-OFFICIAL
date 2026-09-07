@@ -31,7 +31,8 @@ import {
   ExternalLink,
   ChevronRight,
   HelpCircle,
-  Send
+  Send,
+  Smartphone
 } from 'lucide-react';
 import { 
   fetchAdminBookings, 
@@ -50,8 +51,34 @@ import {
 } from '../../lib/adminStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { sendResendTestEmail } from '../../lib/emailService';
+import MobileAdminApp from './MobileAdminApp';
 
 export default function AdminDashboard({ onExit }) {
+  const isAppMode = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      navigator.userAgent.includes('TarotXAdmin') ||
+      new URLSearchParams(window.location.search).get('admin_app') === '1'
+    );
+  };
+
+  const [useMobileLayout, setUseMobileLayout] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return isAppMode() || window.innerWidth < 1024;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (isAppMode()) {
+        setUseMobileLayout(true);
+        return;
+      }
+      setUseMobileLayout(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('overview'); // overview, bookings, revenue, newsletter, settings
   const [bookings, setBookings] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
@@ -241,6 +268,45 @@ export default function AdminDashboard({ onExit }) {
     }
   };
 
+  if (useMobileLayout) {
+    return (
+      <MobileAdminApp
+        bookings={bookings}
+        subscribers={subscribers}
+        metrics={metrics}
+        loading={loading}
+        onRefresh={loadData}
+        onStatusChange={handleStatusChange}
+        onSaveReaderNotes={async (id, notes) => {
+          const b = bookings.find(item => item.id === id);
+          const res = await updateBookingStatus(id, b?.status || 'confirmed', notes);
+          if (res.success) {
+            setBookings(prev => prev.map(item => item.id === id ? { ...item, reader_notes: notes } : item));
+          }
+        }}
+        onDeleteBooking={handleDeleteBooking}
+        onAddManualBooking={async (formData) => {
+          const res = await addManualBooking(formData);
+          if (res.success) loadData();
+        }}
+        onDeleteSubscriber={handleDeleteSub}
+        onAddSubscriber={async (email, source) => {
+          const res = await subscribeNewsletter(email, source);
+          if (res.success) loadData();
+        }}
+        onExportBookings={() => exportBookingsToCSV(bookings)}
+        onExportRevenue={() => exportRevenueToCSV(bookings)}
+        onExportNewsletter={() => exportNewsletterToCSV(subscribers)}
+        onSendTestEmail={sendResendTestEmail}
+        onLogout={handleLogout}
+        onExit={onExit}
+        customPasscodeState={{
+          setPasscode: (pin) => setCustomPasscode(pin)
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-obsidian-950 text-slate-100 font-sans selection:bg-gold-500 selection:text-obsidian-950 flex flex-col">
       {/* Background ambient lighting */}
@@ -295,6 +361,16 @@ export default function AdminDashboard({ onExit }) {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-gold-400' : ''}`} />
             <span className="hidden sm:inline">Refresh</span>
+          </button>
+
+          {/* Switch to Mobile App UI */}
+          <button
+            onClick={() => setUseMobileLayout(true)}
+            title="Switch to Mobile App Experience"
+            className="p-2 rounded-xl bg-obsidian-900 border border-slate-800 hover:border-gold-500/40 text-slate-300 hover:text-gold-300 transition-all text-xs flex items-center space-x-1.5"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-gold-400" />
+            <span className="hidden md:inline">Mobile App View</span>
           </button>
 
           {/* New Booking */}
