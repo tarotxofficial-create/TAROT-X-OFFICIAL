@@ -32,7 +32,10 @@ import {
   ChevronRight,
   HelpCircle,
   Send,
-  Smartphone
+  Smartphone,
+  Bell,
+  AlarmClock,
+  Volume2
 } from 'lucide-react';
 import { 
   fetchAdminBookings, 
@@ -122,9 +125,73 @@ export default function AdminDashboard({ onExit }) {
     }
   };
 
+  // Meeting Reminders & Popup Alerts Facility
+  const [reminderNotice, setReminderNotice] = useState(null);
+  const [simulatedPopup, setSimulatedPopup] = useState(null);
+
+  const handleTestMeetingReminder = (seconds = 5) => {
+    if (typeof window !== 'undefined' && window.AndroidReminders?.testFiveMinuteReminder) {
+      window.AndroidReminders.testFiveMinuteReminder(seconds);
+      setReminderNotice(`🔮 Test meeting reminder scheduled for ${seconds} seconds! Lock your phone or exit app now.`);
+    } else {
+      setReminderNotice(`🔮 [Browser Emulation] Alarm armed for ${seconds} seconds... Screen simulation incoming!`);
+      setTimeout(() => {
+        setSimulatedPopup({
+          type: 'MEETING_REMINDER',
+          client_name: 'Aarav Mehta (Test)',
+          service_name: '1-to-1 Live Zoom Reading',
+          scheduled_time: '18:00 IST (Starting in 5 mins)',
+          phone: '+91 98201 44521',
+          focusArea: 'Career & High-Stakes Venture Strategy. Hesitation loops around equity split.'
+        });
+        setReminderNotice(null);
+      }, seconds * 1000);
+    }
+  };
+
+  const handleTestNewBookingPopup = () => {
+    const sampleBooking = {
+      id: `test_${Date.now()}`,
+      name: 'Pooja Ramanathan (Test)',
+      service_title: '1-to-1 Live Zoom Reading',
+      inrAmount: 999,
+      preferred_date: new Date().toISOString().split('T')[0],
+      preferred_time: '19:30',
+      phone: '+91 97412 88902',
+      focusArea: 'Relationship Dynamics & Career Timing'
+    };
+
+    if (typeof window !== 'undefined' && window.AndroidReminders?.testNewBookingAlert) {
+      window.AndroidReminders.testNewBookingAlert(JSON.stringify(sampleBooking));
+      setReminderNotice('✨ New booking alert triggered on phone!');
+    } else {
+      setSimulatedPopup({
+        type: 'NEW_BOOKING',
+        client_name: sampleBooking.name,
+        service_name: sampleBooking.service_title,
+        scheduled_time: `${sampleBooking.preferred_date} at ${sampleBooking.preferred_time}`,
+        phone: sampleBooking.phone,
+        inrAmount: sampleBooking.inrAmount,
+        focusArea: sampleBooking.focusArea
+      });
+    }
+  };
+
+  const handleSyncBookingsWithDevice = (list = bookings) => {
+    if (typeof window !== 'undefined' && window.AndroidReminders?.syncAllBookings) {
+      try {
+        window.AndroidReminders.syncAllBookings(JSON.stringify(list));
+        setReminderNotice(`✅ ${list.length} consultations synchronized with device alarm engine!`);
+      } catch (e) {
+        console.warn('Native reminder sync notice:', e);
+      }
+    } else {
+      setReminderNotice(`ℹ️ ${list.length} consultations ready for device alarm engine.`);
+    }
+  };
+
   // Clock
   const [currentTime, setCurrentTime] = useState(new Date());
-
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -141,6 +208,14 @@ export default function AdminDashboard({ onExit }) {
       ]);
       setBookings(fetchedBookings);
       setSubscribers(fetchedSubs);
+      // Automatically sync upcoming live meetings with native Android alarms
+      if (typeof window !== 'undefined' && window.AndroidReminders?.syncAllBookings) {
+        try {
+          window.AndroidReminders.syncAllBookings(JSON.stringify(fetchedBookings));
+        } catch (e) {
+          console.warn('Native reminder sync notice:', e);
+        }
+      }
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -298,6 +373,12 @@ export default function AdminDashboard({ onExit }) {
         onExportRevenue={() => exportRevenueToCSV(bookings)}
         onExportNewsletter={() => exportNewsletterToCSV(subscribers)}
         onSendTestEmail={sendResendTestEmail}
+        onTestMeetingReminder={handleTestMeetingReminder}
+        onTestNewBookingPopup={handleTestNewBookingPopup}
+        onSyncBookingsWithDevice={() => handleSyncBookingsWithDevice()}
+        reminderNotice={reminderNotice}
+        simulatedPopup={simulatedPopup}
+        setSimulatedPopup={setSimulatedPopup}
         onLogout={handleLogout}
         onExit={onExit}
         customPasscodeState={{
@@ -1200,6 +1281,95 @@ export default function AdminDashboard({ onExit }) {
               </div>
             </div>
 
+            {/* Native Android Meeting Reminders & Popup Alerts Facility */}
+            <div className="bg-obsidian-900/80 border border-gold-500/30 rounded-2xl p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-gold-500/15 border border-gold-500/40 flex items-center justify-center text-gold-400">
+                    <AlarmClock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-cinzel text-base font-bold text-slate-100 flex items-center space-x-2">
+                      <span>Automatic Meeting & Booking Popups</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        {typeof window !== 'undefined' && window.AndroidReminders?.isNativeAvailable() ? 'Native Android Engine Active' : 'Web Emulation Ready'}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Wakes the phone screen with audio chime and displays a full-screen consultation alert 5 minutes before scheduled meetings, even if closed or locked.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSyncBookingsWithDevice()}
+                  className="px-3 py-1.5 rounded-xl bg-obsidian-950 border border-gold-500/30 hover:border-gold-500/60 text-gold-400 text-xs font-mono flex items-center space-x-1.5 transition-all self-start sm:self-auto"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Sync {bookings.length} Bookings</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                {/* Test Run 1: 5-Sec Meeting Reminder */}
+                <div className="p-4 rounded-xl bg-obsidian-950/80 border border-slate-800/80 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-cinzel font-bold text-gold-400 flex items-center space-x-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>5-Minute Pre-Meeting Alarm Test</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">5-Sec Trigger</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      Schedules an authoritative wake-up alarm for 5 seconds from now. Lock your phone or exit the app to test the screen wake-up and popup.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTestMeetingReminder(5)}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-1.5 transition-all active:scale-98 shadow-lg shadow-gold-500/10"
+                  >
+                    <AlarmClock className="w-4 h-4" />
+                    <span>Run 5-Sec Meeting Reminder Test</span>
+                  </button>
+                </div>
+
+                {/* Test Run 2: Instant Booking Alert */}
+                <div className="p-4 rounded-xl bg-obsidian-950/80 border border-slate-800/80 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-cinzel font-bold text-emerald-400 flex items-center space-x-1.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Instant New Booking Alert Test</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">Immediate</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                      Simulates a new incoming consultation booking and immediately triggers the full-screen alert popup with client and inquiry details.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTestNewBookingPopup}
+                    className="w-full py-2.5 px-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-emerald-300 font-cinzel font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-1.5 transition-all active:scale-98"
+                  >
+                    <Bell className="w-4 h-4" />
+                    <span>Run New Booking Alert Test</span>
+                  </button>
+                </div>
+              </div>
+
+              {reminderNotice && (
+                <div className="p-3 rounded-xl bg-gold-500/10 border border-gold-500/30 text-xs font-mono text-gold-300 flex items-center space-x-2 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-gold-400 shrink-0" />
+                  <span>{reminderNotice}</span>
+                </div>
+              )}
+            </div>
 
           </div>
         )}
@@ -1509,6 +1679,90 @@ export default function AdminDashboard({ onExit }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Luxury Meeting / Booking Reminder Popup Simulation */}
+      {simulatedPopup && (
+        <div className="fixed inset-0 z-50 bg-obsidian-950/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-obsidian-900 border-2 border-gold-500 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-gold-500/20 relative animate-in zoom-in-95 duration-200">
+            {/* Category Pill */}
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-gold-500/15 border border-gold-500/40 text-gold-400 text-xs font-mono font-semibold">
+              <AlarmClock className="w-3.5 h-3.5 animate-bounce" />
+              <span>{simulatedPopup.type === 'MEETING_REMINDER' ? '🔮 5 MINUTES BEFORE MEETING' : '✨ NEW CLIENT BOOKING'}</span>
+            </div>
+
+            <div>
+              <h3 className="font-cinzel text-2xl font-bold text-slate-100">
+                {simulatedPopup.type === 'MEETING_REMINDER' ? 'Consultation Alert' : 'Live Booking Confirmed'}
+              </h3>
+              <p className="text-xs font-mono font-bold text-gold-400 mt-1">
+                {simulatedPopup.scheduled_time || 'Starting Promptly'}
+              </p>
+            </div>
+
+            {/* Avatar Circle */}
+            <div className="w-16 h-16 rounded-full bg-obsidian-950 border-2 border-gold-500 mx-auto flex items-center justify-center text-gold-400 text-2xl font-cinzel font-bold shadow-lg shadow-gold-500/10">
+              {simulatedPopup.client_name ? simulatedPopup.client_name[0] : 'C'}
+            </div>
+
+            <div>
+              <h4 className="font-cinzel text-lg font-bold text-slate-100">
+                {simulatedPopup.client_name}
+              </h4>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                {simulatedPopup.service_name} {simulatedPopup.inrAmount ? `· ₹${simulatedPopup.inrAmount}` : ''}
+              </p>
+            </div>
+
+            {/* Inquiry Box */}
+            {simulatedPopup.focusArea && (
+              <div className="p-3 rounded-xl bg-obsidian-950 border border-slate-800 text-xs text-slate-300 italic text-left">
+                "{simulatedPopup.focusArea}"
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-2.5 pt-2">
+              <a
+                href="https://zoom.us"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setSimulatedPopup(null)}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg shadow-gold-500/20"
+              >
+                <Video className="w-4 h-4" />
+                <span>Start / Join Zoom Meeting</span>
+              </a>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={`https://wa.me/${simulatedPopup.phone?.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 px-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-mono flex items-center justify-center space-x-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </a>
+                <a
+                  href={`tel:${simulatedPopup.phone}`}
+                  className="py-2 px-3 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-mono flex items-center justify-center space-x-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call</span>
+                </a>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSimulatedPopup(null)}
+                className="text-xs text-slate-500 hover:text-slate-300 font-mono pt-1"
+              >
+                ✕ Dismiss Alert
+              </button>
+            </div>
           </div>
         </div>
       )}

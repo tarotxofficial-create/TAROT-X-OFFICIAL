@@ -4,6 +4,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    
+    <!-- Meeting Reminders & Full-Screen Popup Permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -24,6 +33,35 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Automatic 5-Minute Consultation Reminder Popup Activity -->
+        <activity
+            android:name=".ReminderPopupActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
+
+        <!-- Alarm Receiver for Meeting Reminders -->
+        <receiver
+            android:name=".MeetingAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.tarotx.admin.ACTION_MEETING_REMINDER" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Device Restart Receiver to Restore Scheduled Alarms -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Base64
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -53,6 +55,16 @@ class MainActivity : ComponentActivity() {
         // Window status bar & navigation bar theme
         window.statusBarColor = Color.parseColor(COLOR_OBSIDIAN)
         window.navigationBarColor = Color.parseColor(COLOR_OBSIDIAN)
+
+        // Initialize high-priority meeting reminder notification channels
+        ReminderManager.initNotificationChannels(this)
+
+        // Request POST_NOTIFICATIONS permission on Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 2001)
+            }
+        }
 
         // Root FrameLayout
         val rootLayout = FrameLayout(this).apply {
@@ -100,6 +112,9 @@ class MainActivity : ComponentActivity() {
                 mediaPlaybackRequiresUserGesture = false
                 mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
             }
+
+            // Javascript interface for 5-minute pre-meeting alarms and booking popups
+            addJavascriptInterface(AndroidRemindersBridge(), "AndroidReminders")
         }
 
         // Top gold progress bar
@@ -408,6 +423,68 @@ class MainActivity : ComponentActivity() {
             val results = WebChromeClient.FileChooserParams.parseResult(resultCode, data)
             fileUploadCallback?.onReceiveValue(results)
             fileUploadCallback = null
+        }
+    }
+
+    /**
+     * Native JavaScript Interface exposed to Web Admin Console.
+     * Accessible in JavaScript as window.AndroidReminders.
+     */
+    inner class AndroidRemindersBridge {
+        @JavascriptInterface
+        fun scheduleMeeting(bookingJson: String) {
+            try {
+                val obj = JSONObject(bookingJson)
+                ReminderManager.syncBookingFromJson(this@MainActivity, obj)
+            } catch (e: Exception) {
+                Log.e("AndroidRemindersBridge", "Error scheduling meeting: ${e.message}", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun syncAllBookings(bookingsJsonArray: String) {
+            try {
+                ReminderManager.syncAllBookingsFromJsonArray(this@MainActivity, bookingsJsonArray)
+            } catch (e: Exception) {
+                Log.e("AndroidRemindersBridge", "Error syncing bookings: ${e.message}", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun testFiveMinuteReminder(delaySeconds: Int) {
+            val delay = if (delaySeconds <= 0) 5 else delaySeconds
+            ReminderManager.scheduleTestAlarm(this@MainActivity, delay)
+            runOnUiThread {
+                Toast.makeText(
+                    this@MainActivity,
+                    "🔮 Meeting reminder scheduled for $delay seconds! Lock screen or exit app to test.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+        @JavascriptInterface
+        fun testNewBookingAlert(bookingJson: String) {
+            try {
+                val obj = JSONObject(bookingJson)
+                ReminderManager.triggerNewBookingAlert(
+                    context = this@MainActivity,
+                    bookingId = obj.optString("id", "test_new_01"),
+                    clientName = obj.optString("name", "Pooja Ramanathan (Test)"),
+                    serviceTitle = obj.optString("service_title", "Offline Pattern Dossier"),
+                    inrAmount = obj.optInt("inrAmount", 99),
+                    preferredDate = obj.optString("preferred_date", "Today"),
+                    preferredTime = obj.optString("preferred_time", "Asynchronous Delivery"),
+                    phone = obj.optString("phone", "+91 97412 88902")
+                )
+            } catch (e: Exception) {
+                Log.e("AndroidRemindersBridge", "Error triggering new booking alert: ${e.message}", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun isNativeAvailable(): Boolean {
+            return true
         }
     }
 }

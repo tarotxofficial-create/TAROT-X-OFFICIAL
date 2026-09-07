@@ -26,7 +26,10 @@ import {
   Trash2,
   Sparkles,
   User,
-  Check
+  Check,
+  AlarmClock,
+  Bell,
+  Video
 } from 'lucide-react';
 
 export default function MobileAdminApp({
@@ -45,6 +48,12 @@ export default function MobileAdminApp({
   onExportRevenue,
   onExportNewsletter,
   onSendTestEmail,
+  onTestMeetingReminder,
+  onTestNewBookingPopup,
+  onSyncBookingsWithDevice,
+  reminderNotice,
+  simulatedPopup,
+  setSimulatedPopup,
   onLogout,
   onExit,
   customPasscodeState
@@ -317,30 +326,39 @@ export default function MobileAdminApp({
               <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
                 Executive Touch Actions
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => setIsNewBookingOpen(true)}
-                  className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
                 >
                   <Plus className="w-4 h-4 text-gold-400" />
-                  <span className="text-[10px] font-mono">New Book</span>
+                  <span className="text-[9px] font-mono">New Book</span>
                 </button>
 
                 <button
                   onClick={onExportBookings}
-                  className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
                 >
                   <Download className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[10px] font-mono">CSV Export</span>
+                  <span className="text-[9px] font-mono">CSV Export</span>
+                </button>
+
+                <button
+                  onClick={() => onTestMeetingReminder?.(5)}
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-obsidian-950 border border-gold-500/40 hover:border-gold-500 text-gold-300 active:scale-95 transition-all text-center space-y-1 shadow-sm shadow-gold-500/10"
+                  title="Test 5-Second Meeting Reminder Alarm"
+                >
+                  <AlarmClock className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span className="text-[9px] font-mono font-bold text-gold-400">Test Alert</span>
                 </button>
 
                 <button
                   onClick={handleTriggerTestEmail}
                   disabled={emailSending}
-                  className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-obsidian-950 border border-gold-500/20 hover:border-gold-500/50 text-slate-300 active:scale-95 transition-all text-center space-y-1"
                 >
                   <Send className={`w-4 h-4 ${emailSending ? 'animate-pulse text-amber-400' : 'text-blue-400'}`} />
-                  <span className="text-[10px] font-mono">{emailSending ? 'Sending...' : 'Test Mail'}</span>
+                  <span className="text-[9px] font-mono">{emailSending ? 'Sending...' : 'Test Mail'}</span>
                 </button>
               </div>
               {emailNotice && (
@@ -828,6 +846,59 @@ export default function MobileAdminApp({
               )}
             </div>
 
+            {/* Native Android Meeting Reminders & Automatic Popup Card */}
+            <div className="bg-obsidian-900/80 border border-gold-500/30 rounded-3xl p-5 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-slate-200">
+                  <AlarmClock className="w-4 h-4 text-gold-400" />
+                  <span className="font-cinzel text-sm font-bold">5-Min Meeting & Booking Popups</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-mono border border-emerald-500/30">
+                  {typeof window !== 'undefined' && window.AndroidReminders?.isNativeAvailable() ? 'Native Engine Active' : 'Emulation Mode'}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                Wakes your phone and displays a full-screen consultation alert with instant Zoom/WhatsApp buttons 5 minutes prior to every Live Zoom reading, even if locked.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => onTestMeetingReminder?.(5)}
+                  className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 text-obsidian-950 font-cinzel font-bold text-[11px] uppercase tracking-wider flex items-center justify-center space-x-1.5 active:scale-95 transition-all shadow-md shadow-gold-500/10"
+                >
+                  <AlarmClock className="w-3.5 h-3.5" />
+                  <span>Test 5s Alarm</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onTestNewBookingPopup?.()}
+                  className="py-2.5 px-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-cinzel font-bold text-[11px] uppercase tracking-wider flex items-center justify-center space-x-1.5 active:scale-95 transition-all"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Test Booking</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSyncBookingsWithDevice?.()}
+                className="w-full py-2 rounded-xl bg-obsidian-950 border border-slate-800 text-slate-400 hover:text-gold-400 text-[11px] font-mono flex items-center justify-center space-x-1.5 transition-all"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Sync {bookings.length} Consultations with Device</span>
+              </button>
+
+              {reminderNotice && (
+                <div className="p-2.5 rounded-xl bg-gold-500/15 text-gold-300 border border-gold-500/30 text-[11px] font-mono flex items-start space-x-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-gold-400 shrink-0 mt-0.5" />
+                  <span className="leading-tight">{reminderNotice}</span>
+                </div>
+              )}
+            </div>
+
             {/* System Node Telemetry */}
             <div className="bg-obsidian-900/60 border border-slate-800/80 rounded-2xl p-4 space-y-2.5 text-xs font-mono">
               <div className="text-slate-400 uppercase tracking-widest text-[10px]">Telemetry & Node Info</div>
@@ -1213,6 +1284,90 @@ export default function MobileAdminApp({
 
         </div>
       </nav>
+
+      {/* Full-Screen Luxury Meeting / Booking Reminder Popup Simulation */}
+      {simulatedPopup && (
+        <div className="fixed inset-0 z-50 bg-obsidian-950/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-obsidian-900 border-2 border-gold-500 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl shadow-gold-500/25 relative animate-in zoom-in-95 duration-200">
+            {/* Category Pill */}
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-gold-500/15 border border-gold-500/40 text-gold-400 text-xs font-mono font-semibold">
+              <AlarmClock className="w-3.5 h-3.5 animate-bounce" />
+              <span>{simulatedPopup.type === 'MEETING_REMINDER' ? '🔮 5 MINUTES BEFORE MEETING' : '✨ NEW CLIENT BOOKING'}</span>
+            </div>
+
+            <div>
+              <h3 className="font-cinzel text-xl font-bold text-slate-100">
+                {simulatedPopup.type === 'MEETING_REMINDER' ? 'Consultation Alert' : 'Live Booking Confirmed'}
+              </h3>
+              <p className="text-xs font-mono font-bold text-gold-400 mt-0.5">
+                {simulatedPopup.scheduled_time || 'Starting Promptly'}
+              </p>
+            </div>
+
+            {/* Avatar Circle */}
+            <div className="w-14 h-14 rounded-full bg-obsidian-950 border-2 border-gold-500 mx-auto flex items-center justify-center text-gold-400 text-xl font-cinzel font-bold shadow-md shadow-gold-500/10">
+              {simulatedPopup.client_name ? simulatedPopup.client_name[0] : 'C'}
+            </div>
+
+            <div>
+              <h4 className="font-cinzel text-base font-bold text-slate-100">
+                {simulatedPopup.client_name}
+              </h4>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                {simulatedPopup.service_name} {simulatedPopup.inrAmount ? `· ₹${simulatedPopup.inrAmount}` : ''}
+              </p>
+            </div>
+
+            {/* Inquiry Box */}
+            {simulatedPopup.focusArea && (
+              <div className="p-3 rounded-xl bg-obsidian-950 border border-slate-800 text-xs text-slate-300 italic text-left">
+                "{simulatedPopup.focusArea}"
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-2 pt-1">
+              <a
+                href="https://zoom.us"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setSimulatedPopup?.(null)}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 text-obsidian-950 font-cinzel font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg shadow-gold-500/20 active:scale-95 transition-all"
+              >
+                <Video className="w-4 h-4" />
+                <span>Start / Join Zoom Meeting</span>
+              </a>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={`https://wa.me/${simulatedPopup.phone?.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 px-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-mono flex items-center justify-center space-x-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </a>
+                <a
+                  href={`tel:${simulatedPopup.phone}`}
+                  className="py-2 px-3 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-mono flex items-center justify-center space-x-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call</span>
+                </a>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSimulatedPopup?.(null)}
+                className="text-xs text-slate-500 hover:text-slate-300 font-mono pt-1"
+              >
+                ✕ Dismiss Alert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
