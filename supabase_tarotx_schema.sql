@@ -32,15 +32,42 @@ CREATE TABLE IF NOT EXISTS public.tarot_inquiries (
   message TEXT NOT NULL
 );
 
--- 4. Enable Row Level Security (RLS)
+-- 4. Newsletter Subscribers Table
+CREATE TABLE IF NOT EXISTS public.tarot_newsletter (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  source TEXT DEFAULT 'website_footer',
+  status TEXT DEFAULT 'subscribed'
+);
+
+-- 5. Enable Row Level Security (RLS)
 ALTER TABLE public.tarot_bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tarot_inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tarot_newsletter ENABLE ROW LEVEL SECURITY;
 
--- 5. Policies: Allow clients to submit bookings & inquiries
+-- 6. Policies: Allow clients to submit bookings, inquiries & newsletter subscriptions
 CREATE POLICY "Allow public insert to tarot_bookings"
 ON public.tarot_bookings FOR INSERT
 WITH CHECK (true);
 
+CREATE POLICY "Allow public read to tarot_bookings"
+ON public.tarot_bookings FOR SELECT
+USING (true);
+
+CREATE POLICY "Allow public update to tarot_bookings"
+ON public.tarot_bookings FOR UPDATE
+USING (true);
+
 CREATE POLICY "Allow public insert to tarot_inquiries"
 ON public.tarot_inquiries FOR INSERT
 WITH CHECK (true);
+
+CREATE POLICY "Allow public insert to tarot_newsletter"
+ON public.tarot_newsletter FOR INSERT
+WITH CHECK (true);
+
+CREATE POLICY "Allow public read to tarot_newsletter"
+ON public.tarot_newsletter FOR SELECT
+USING (true);
+

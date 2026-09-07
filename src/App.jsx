@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AntigravityCanvas from './components/3d/AntigravityCanvas';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -8,10 +8,76 @@ import Testimonials from './components/Testimonials';
 import BookingForm from './components/BookingForm';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
+import AdminDashboard from './components/admin/AdminDashboard';
+import AdminAuth from './components/admin/AdminAuth';
+import { isAdminAuthenticated } from './lib/adminStore';
 
 export default function App() {
   const [selectedService, setSelectedService] = useState(READING_SERVICES[0]);
 
+  // Check if current URL requests the admin console
+  const checkIsAdminRoute = () => {
+    return (
+      window.location.pathname.startsWith('/admin') ||
+      window.location.hash === '#admin' ||
+      new URLSearchParams(window.location.search).get('admin') === 'true'
+    );
+  };
+
+  const [isAdminView, setIsAdminView] = useState(checkIsAdminRoute);
+  const [authenticated, setAuthenticated] = useState(isAdminAuthenticated());
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const isAdm = checkIsAdminRoute();
+      setIsAdminView(isAdm);
+      if (isAdm) {
+        setAuthenticated(isAdminAuthenticated());
+      }
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
+  }, []);
+
+  const openAdmin = () => {
+    window.location.hash = '#admin';
+    setIsAdminView(true);
+    setAuthenticated(isAdminAuthenticated());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const exitAdmin = () => {
+    window.location.hash = '';
+    if (window.location.pathname.startsWith('/admin')) {
+      window.history.pushState({}, '', '/');
+    }
+    setIsAdminView(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ----------------------------------------------------
+  // ADMIN CONSOLE ROUTE
+  // ----------------------------------------------------
+  if (isAdminView) {
+    if (!authenticated) {
+      return (
+        <AdminAuth 
+          onAuthenticated={() => setAuthenticated(true)} 
+          onExit={exitAdmin} 
+        />
+      );
+    }
+    return <AdminDashboard onExit={exitAdmin} />;
+  }
+
+  // ----------------------------------------------------
+  // PUBLIC CLIENT FACING STORE
+  // ----------------------------------------------------
   const scrollToBooking = (service) => {
     if (service) setSelectedService(service);
     const el = document.getElementById('booking');
@@ -33,7 +99,7 @@ export default function App() {
       {/* 1. WebGL 3D Zero-G Spatial Canvas (Fixed in Background) */}
       <AntigravityCanvas />
 
-      {/* 2. Deep Space Contrast Vignette (Calibrated to let 3D realms pop while keeping crystal clear text contrast) */}
+      {/* 2. Deep Space Contrast Vignette (Calibrated for high text readability) */}
       <div className="fixed inset-0 bg-gradient-to-b from-obsidian-950/45 via-obsidian-950/20 to-obsidian-950/60 pointer-events-none z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(5,5,8,0.75)_100%)] pointer-events-none z-10" />
 
@@ -43,7 +109,7 @@ export default function App() {
       {/* 4. Sticky Top Navigation with 432Hz Synthesizer Audio Toggle */}
       <Navbar onBookClick={() => scrollToBooking()} />
 
-      {/* 4. Single Continuous Scroll-Down Sections */}
+      {/* 5. Main Scroll Sections */}
       <main className="relative z-20">
         {/* Section 1: Hero */}
         <section id="hero">
@@ -72,10 +138,9 @@ export default function App() {
         <FAQ />
       </main>
 
-      {/* 5. Footer */}
-      <Footer />
+      {/* 6. Footer with Newsletter Subscription & Discreet Admin Portal */}
+      <Footer onOpenAdmin={openAdmin} />
 
     </div>
   );
 }
-
