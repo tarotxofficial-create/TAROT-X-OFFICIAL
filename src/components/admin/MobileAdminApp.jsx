@@ -94,14 +94,55 @@ export default function MobileAdminApp({
   const [emailSending, setEmailSending] = useState(false);
   const [emailNotice, setEmailNotice] = useState(null);
 
+  // Normalize all incoming bookings so both naming conventions (name/client_name, service_title/service_name, etc.) are always present
+  const normalizedBookings = (bookings || []).map(b => {
+    const name = b.client_name || b.name || 'Anonymous Seeker';
+    const email = b.client_email || b.email || '';
+    const phone = b.client_phone || b.phone || '';
+    const serviceName = b.service_name || b.service_title || (b.inrAmount === 999 ? '1-to-1 Live Zoom Reading' : 'Offline Pattern Report');
+    const servicePrice = b.service_price || b.inrAmount || (b.price?.includes('999') ? 999 : 99);
+    const inquiry = b.client_inquiry || b.notes || b.focusArea || b.focus_area || '';
+    const scheduledAt = b.scheduled_at || (b.preferred_date ? `${b.preferred_date} ${b.preferred_time || ''}`.trim() : '');
+    const bookingRef = b.booking_ref || b.id || '';
+    const paymentRef = b.payment_reference || b.payment_id || 'RAZORPAY_PROD';
+    const status = b.status || 'confirmed';
+
+    return {
+      ...b,
+      id: b.id || bookingRef,
+      name,
+      client_name: name,
+      email,
+      client_email: email,
+      phone,
+      client_phone: phone,
+      service_title: serviceName,
+      service_name: serviceName,
+      inrAmount: servicePrice,
+      service_price: servicePrice,
+      notes: inquiry,
+      client_inquiry: inquiry,
+      scheduled_at: scheduledAt,
+      preferred_date: b.preferred_date || (scheduledAt ? scheduledAt.split(' ')[0] : ''),
+      preferred_time: b.preferred_time || (scheduledAt ? scheduledAt.split(' ')[1] || '' : ''),
+      booking_ref: bookingRef,
+      payment_reference: paymentRef,
+      status,
+      reader_notes: b.reader_notes || ''
+    };
+  });
+
   // Filter Bookings
-  const filteredBookings = bookings.filter(b => {
-    const matchesSearch = 
-      b.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.client_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.client_phone?.includes(searchQuery) ||
-      b.service_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.booking_ref?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredBookings = normalizedBookings.filter(b => {
+    const q = (searchQuery || '').toLowerCase().trim();
+    const matchesSearch = !q || 
+      (b.client_name && b.client_name.toLowerCase().includes(q)) ||
+      (b.client_email && b.client_email.toLowerCase().includes(q)) ||
+      (b.client_phone && b.client_phone.includes(q)) ||
+      (b.service_name && b.service_name.toLowerCase().includes(q)) ||
+      (b.booking_ref && b.booking_ref.toLowerCase().includes(q)) ||
+      (b.client_inquiry && b.client_inquiry.toLowerCase().includes(q));
+
     const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -371,7 +412,7 @@ export default function MobileAdminApp({
             {/* Attention Queue: Bookings awaiting reading or completed */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-slate-400 px-1">
-                <span>Recent Inquiries ({bookings.slice(0, 4).length})</span>
+                <span>Recent Inquiries ({normalizedBookings.slice(0, 4).length})</span>
                 <button 
                   onClick={() => setActiveTab('bookings')}
                   className="text-gold-400 hover:text-gold-300 flex items-center space-x-0.5 text-[11px]"
@@ -382,7 +423,7 @@ export default function MobileAdminApp({
               </div>
 
               <div className="space-y-2">
-                {bookings.slice(0, 3).map(b => (
+                {normalizedBookings.slice(0, 3).map(b => (
                   <div
                     key={b.id}
                     onClick={() => handleOpenBookingDetails(b)}
@@ -645,7 +686,7 @@ export default function MobileAdminApp({
 
             {/* Transactions Feed */}
             <div className="space-y-2.5">
-              {bookings.map(item => (
+              {normalizedBookings.map(item => (
                 <div 
                   key={item.id}
                   className="bg-obsidian-900/80 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between"

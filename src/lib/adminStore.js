@@ -365,24 +365,52 @@ export async function updateBookingStatus(id, newStatus, readerNotes = null) {
 }
 
 export async function addManualBooking(bookingData) {
-  const is999 = bookingData.service_title?.includes('999') || bookingData.price?.includes('999');
+  const is999 = 
+    bookingData.service_title?.includes('999') || 
+    bookingData.service_name?.includes('999') || 
+    bookingData.price?.includes('999') ||
+    bookingData.service_price === 999 ||
+    bookingData.service_id === 'zoom-reading';
+
+  const scheduledDate = bookingData.scheduled_at 
+    ? bookingData.scheduled_at.split('T')[0] 
+    : (bookingData.preferred_date || new Date().toISOString().split('T')[0]);
+
+  const scheduledTime = bookingData.scheduled_at 
+    ? (bookingData.scheduled_at.includes('T') ? bookingData.scheduled_at.split('T')[1] : bookingData.scheduled_at.split(' ')[1] || '18:00')
+    : (bookingData.preferred_time || (is999 ? '18:00' : 'Asynchronous Delivery'));
+
+  const clientName = bookingData.client_name || bookingData.name || 'Anonymous Client';
+  const clientEmail = bookingData.client_email || bookingData.email || 'client@example.com';
+  const clientPhone = bookingData.client_phone || bookingData.phone || '';
+  const serviceTitle = bookingData.service_name || bookingData.service_title || (is999 ? '1-to-1 Live Zoom Reading' : 'Offline Pattern Report');
+  const inquiry = bookingData.client_inquiry || bookingData.notes || bookingData.focusArea || bookingData.focus_area || 'Manually scheduled consultation by Reader.';
+
   const newBooking = {
     id: `book_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     created_at: new Date().toISOString(),
-    name: bookingData.name || 'Anonymous Client',
-    email: bookingData.email || 'client@example.com',
-    phone: bookingData.phone || '',
-    service_title: bookingData.service_title || (is999 ? '1-to-1 Live Zoom Reading' : 'Offline Pattern Report'),
+    name: clientName,
+    client_name: clientName,
+    email: clientEmail,
+    client_email: clientEmail,
+    phone: clientPhone,
+    client_phone: clientPhone,
+    service_title: serviceTitle,
+    service_name: serviceTitle,
     price: is999 ? '₹999' : '₹99',
     inrAmount: is999 ? 999 : 99,
+    service_price: is999 ? 999 : 99,
     format: is999 ? 'Live Zoom Video' : 'Offline Written Report (Email)',
-    preferred_date: bookingData.preferred_date || new Date().toISOString().split('T')[0],
-    preferred_time: bookingData.preferred_time || (is999 ? '18:00' : 'Asynchronous Delivery'),
+    preferred_date: scheduledDate,
+    preferred_time: scheduledTime,
+    scheduled_at: `${scheduledDate} ${scheduledTime}`,
     timezone: bookingData.timezone || 'Asia/Kolkata',
-    focusArea: bookingData.focusArea || 'General Strategy & Probability',
-    notes: bookingData.notes || 'Manually entered booking by Reader.',
+    focusArea: inquiry,
+    notes: inquiry,
+    client_inquiry: inquiry,
     reader_notes: bookingData.reader_notes || '',
-    payment_id: bookingData.payment_id || `pay_manual_${Date.now().toString().slice(-6)}`,
+    payment_id: bookingData.payment_id || bookingData.payment_reference || `pay_manual_${Date.now().toString().slice(-6)}`,
+    payment_reference: bookingData.payment_id || bookingData.payment_reference || `pay_manual_${Date.now().toString().slice(-6)}`,
     payment_status: 'paid',
     status: bookingData.status || 'confirmed'
   };

@@ -442,13 +442,26 @@ export default function AdminDashboard({ onExit }) {
   };
 
   if (useMobileLayout) {
+    const mobileCompatibleBookings = bookings.map(b => ({
+      ...b,
+      client_name: b.name || b.client_name || 'Anonymous Seeker',
+      client_email: b.email || b.client_email || '',
+      client_phone: b.phone || b.client_phone || '',
+      service_name: b.service_title || b.service_name || (b.inrAmount === 999 ? '1-to-1 Live Zoom Reading' : 'Offline Pattern Report'),
+      service_price: b.inrAmount || b.service_price || (b.price?.includes('999') ? 999 : 99),
+      client_inquiry: b.notes || b.focusArea || b.client_inquiry || '',
+      scheduled_at: b.scheduled_at || (b.preferred_date ? `${b.preferred_date} ${b.preferred_time || ''}`.trim() : ''),
+      booking_ref: b.id || b.booking_ref || '',
+      payment_reference: b.payment_id || b.payment_reference || 'RAZORPAY_PROD'
+    }));
+
     return (
       <MobileAdminApp
-        bookings={bookings}
+        bookings={mobileCompatibleBookings}
         subscribers={subscribers}
         metrics={metrics}
         loading={loading}
-        onRefresh={loadData}
+        onRefresh={() => loadData(false)}
         onStatusChange={handleStatusChange}
         onSaveReaderNotes={async (id, notes) => {
           const b = bookings.find(item => item.id === id);
