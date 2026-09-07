@@ -220,3 +220,60 @@ export function subscribeToTarotNewsletter(onUpdate) {
     supabase.removeChannel(channel);
   };
 }
+
+/**
+ * Subscribes to real-time changes on tarot_settings table.
+ */
+export function subscribeToTarotSettings(onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+
+  const channel = supabase.channel('tarotx_settings_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tarot_settings' }, (payload) => {
+      onUpdate(payload);
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * Fetch a shared setting from tarot_settings table.
+ */
+export async function fetchTarotSetting(key, defaultValue = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('tarot_settings')
+        .select('value')
+        .eq('key', key)
+        .single();
+      if (!error && data && data.value !== undefined) {
+        return data.value;
+      }
+    } catch (_) {}
+  }
+  return defaultValue;
+}
+
+/**
+ * Save or update a shared setting in tarot_settings table.
+ */
+export async function saveTarotSetting(key, value) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('tarot_settings')
+        .upsert({ 
+          key, 
+          value, 
+          updated_at: new Date().toISOString() 
+        });
+      return true;
+    } catch (e) {
+      console.warn('saveTarotSetting notice:', e);
+    }
+  }
+  return false;
+}

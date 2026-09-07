@@ -1,4 +1,10 @@
-import { supabase, isSupabaseConfigured, dispatchAdminSignal } from './supabase';
+import { 
+  supabase, 
+  isSupabaseConfigured, 
+  dispatchAdminSignal, 
+  fetchTarotSetting, 
+  saveTarotSetting 
+} from './supabase';
 import { sendNewsletterAlert } from './emailService';
 
 const BOOKINGS_STORAGE_KEY = 'tarotx_official_bookings';
@@ -206,13 +212,29 @@ export function getAdminPasscode() {
   }
 }
 
-export function setCustomPasscode(newPin) {
+export async function syncAdminPasscodeFromCloud() {
+  try {
+    const config = await fetchTarotSetting('admin_config');
+    if (config && config.master_pin) {
+      localStorage.setItem(PASSCODE_STORAGE_KEY, config.master_pin);
+      return config.master_pin;
+    }
+  } catch (_) {}
+  return getAdminPasscode();
+}
+
+export async function setCustomPasscode(newPin) {
   if (!newPin || newPin.length < 4) {
     return { success: false, message: 'Passcode must be at least 4 characters long.' };
   }
   try {
     localStorage.setItem(PASSCODE_STORAGE_KEY, newPin);
-    return { success: true, message: 'Passcode successfully updated.' };
+    // Realtime sync to Supabase settings table so both web & mobile app immediately update
+    await saveTarotSetting('admin_config', { 
+      master_pin: newPin, 
+      updated_at: new Date().toISOString() 
+    });
+    return { success: true, message: 'Passcode successfully updated and synchronized across all portals.' };
   } catch (err) {
     return { success: false, message: err.message };
   }
@@ -251,9 +273,7 @@ export function clearAdminSession() {
 // Bookings Store Management
 // ----------------------------------------------------
 export async function fetchAdminBookings() {
-  let bookings = [];
-
-  // 1. Fetch from Supabase if active
+  // 1. Fetch from Supabase if active (authoritative source of truth)
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -262,87 +282,83 @@ export async function fetchAdminBookings() {
         .order('created_at', { ascending: false });
       
       if (!error && data && data.length > 0) {
-        bookings = data.map(b => ({
+        const bookings = data.map(b => ({
           ...b,
-          inrAmount: b.price?.includes('999') ? 999 : 99
+          inrAmount: b.inr_amount || (b.price?.includes('999') ? 999 : 99)
         }));
+        try {
+          localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings));
+        } catch (_) {}
+        return bookings;
       }
     } catch (e) {
       console.warn('Supabase fetch notice:', e);
     }
   }
 
-  // 2. Fetch from LocalStorage
-  let localData = [];
+  // 2. Fetch from LocalStorage fallback if offline
   try {
     const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY);
     if (raw) {
-      localData = JSON.parse(raw);
+      const localData = JSON.parse(raw);
+      if (localData && localData.length > 0) {
+        return localData;
+      }
     }
   } catch (e) {
     console.warn('LocalStorage parse error:', e);
   }
 
-  // Merge unique by ID
-  const map = new Map();
-  [...bookings, ...localData].forEach(item => {
-    if (item && item.id) {
-      map.set(item.id, {
-        ...item,
-        inrAmount: item.inrAmount || (item.price?.includes('999') ? 999 : 99)
-      });
-    }
-  });
-
-  let merged = Array.from(map.values());
-
-  // 3. If empty, seed initial high-fidelity historical data
-  if (merged.length === 0) {
-    merged = SEED_BOOKINGS;
-    try {
-      localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(merged));
-    } catch (e) {
-      console.warn('Seeding storage error:', e);
-    }
-  }
-
-  // Sort by created_at descending
-  merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-  return merged;
+  return SEED_BOOKINGS;
 }
 
 export async function updateBookingStatus(id, newStatus, readerNotes = null) {
   try {
-    // 1. Update in LocalStorage
+    let updatedItem = null;
+
+    // 1. Sync to Supabase if configured (authoritative write)
+    if (isSupabaseConfigured && supabase) {
+      const payload = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+      if (readerNotes !== null) {
+        payload.notes = readerNotes;
+        payload.reader_notes = readerNotes;
+      }
+      const { data, error } = await supabase
+        .from('tarot_bookings')
+        .update(payload)
+        .eq('id', id)
+        .select();
+
+      if (!error && data && data[0]) {
+        updatedItem = {
+          ...data[0],
+          inrAmount: data[0].inr_amount || (data[0].price?.includes('999') ? 999 : 99)
+        };
+      }
+    }
+
+    // 2. Update in LocalStorage cache
     const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY) || '[]';
     let list = JSON.parse(raw);
-    let updatedItem = null;
 
     list = list.map(item => {
       if (item.id === id) {
-        updatedItem = {
+        const itemUpdated = updatedItem || {
           ...item,
           status: newStatus,
-          ...(readerNotes !== null ? { reader_notes: readerNotes } : {})
+          ...(readerNotes !== null ? { reader_notes: readerNotes, notes: readerNotes } : {})
         };
-        return updatedItem;
+        return itemUpdated;
       }
       return item;
     });
 
     localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(list));
 
-    // 2. Sync to Supabase if configured
-    if (isSupabaseConfigured && supabase) {
-      const payload = { status: newStatus };
-      if (readerNotes !== null) {
-        payload.notes = readerNotes;
-        payload.reader_notes = readerNotes;
-      }
-      await supabase.from('tarot_bookings').update(payload).eq('id', id);
-    }
-
-    return { success: true, booking: updatedItem };
+    return { success: true, booking: updatedItem || { id, status: newStatus } };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -426,8 +442,7 @@ export async function deleteBooking(id) {
 // Newsletter Management
 // ----------------------------------------------------
 export async function fetchNewsletterSubscribers() {
-  let subscribers = [];
-
+  // 1. Fetch from Supabase (authoritative source of truth)
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -436,39 +451,28 @@ export async function fetchNewsletterSubscribers() {
         .order('created_at', { ascending: false });
       
       if (!error && data && data.length > 0) {
-        subscribers = data;
+        try {
+          localStorage.setItem(NEWSLETTER_STORAGE_KEY, JSON.stringify(data));
+        } catch (_) {}
+        return data;
       }
     } catch (e) {
       console.warn('Newsletter supabase notice:', e);
     }
   }
 
-  let local = [];
+  // 2. Fallback to LocalStorage if offline
   try {
     const raw = localStorage.getItem(NEWSLETTER_STORAGE_KEY);
-    if (raw) local = JSON.parse(raw);
+    if (raw) {
+      const localData = JSON.parse(raw);
+      if (localData && localData.length > 0) return localData;
+    }
   } catch (e) {
     console.warn('Newsletter storage parse:', e);
   }
 
-  const map = new Map();
-  [...subscribers, ...local].forEach(s => {
-    if (s && s.email) map.set(s.email.toLowerCase(), s);
-  });
-
-  let merged = Array.from(map.values());
-
-  if (merged.length === 0) {
-    merged = SEED_NEWSLETTER;
-    try {
-      localStorage.setItem(NEWSLETTER_STORAGE_KEY, JSON.stringify(merged));
-    } catch (e) {
-      console.warn('Newsletter seed error:', e);
-    }
-  }
-
-  merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-  return merged;
+  return SEED_NEWSLETTER;
 }
 
 export async function subscribeNewsletter(email, source = 'website_footer') {
@@ -494,11 +498,12 @@ export async function subscribeNewsletter(email, source = 'website_footer') {
     }
 
     if (isSupabaseConfigured && supabase) {
-      await supabase.from('tarot_newsletter').insert([{
+      await supabase.from('tarot_newsletter').upsert([{
+        id: newSub.id,
         email: cleanEmail,
         source,
         status: 'subscribed'
-      }]);
+      }], { onConflict: 'id' });
     }
 
     if (!existing) {
@@ -513,13 +518,14 @@ export async function subscribeNewsletter(email, source = 'website_footer') {
 
 export async function deleteSubscriber(emailOrId) {
   try {
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from('tarot_newsletter').delete().or(`id.eq.${emailOrId},email.eq.${emailOrId}`);
+    }
+
     const raw = localStorage.getItem(NEWSLETTER_STORAGE_KEY) || '[]';
     const list = JSON.parse(raw).filter(s => s.id !== emailOrId && s.email !== emailOrId);
     localStorage.setItem(NEWSLETTER_STORAGE_KEY, JSON.stringify(list));
 
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from('tarot_newsletter').delete().or(`id.eq.${emailOrId},email.eq.${emailOrId}`);
-    }
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message };

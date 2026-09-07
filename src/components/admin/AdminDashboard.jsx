@@ -50,14 +50,16 @@ import {
   exportRevenueToCSV, 
   exportNewsletterToCSV, 
   clearAdminSession, 
-  setCustomPasscode 
+  setCustomPasscode,
+  syncAdminPasscodeFromCloud
 } from '../../lib/adminStore';
 import { 
   isSupabaseConfigured,
   dispatchAdminSignal,
   subscribeToAdminSignals,
   subscribeToTarotBookings,
-  subscribeToTarotNewsletter
+  subscribeToTarotNewsletter,
+  subscribeToTarotSettings
 } from '../../lib/supabase';
 import { sendResendTestEmail } from '../../lib/emailService';
 import MobileAdminApp from './MobileAdminApp';
@@ -202,9 +204,9 @@ export default function AdminDashboard({ onExit }) {
     return () => clearInterval(timer);
   }, []);
 
-  // Load data
-  const loadData = async () => {
-    setLoading(true);
+  // Load data from live Supabase tables (authoritative source)
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [fetchedBookings, fetchedSubs] = await Promise.all([
         fetchAdminBookings(),
@@ -212,6 +214,7 @@ export default function AdminDashboard({ onExit }) {
       ]);
       setBookings(fetchedBookings);
       setSubscribers(fetchedSubs);
+
       // Automatically sync upcoming live meetings with native Android alarms
       if (typeof window !== 'undefined' && window.AndroidReminders?.syncAllBookings) {
         try {
@@ -223,12 +226,14 @@ export default function AdminDashboard({ onExit }) {
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
+    // Synchronize master passcode from cloud settings
+    syncAdminPasscodeFromCloud().catch(() => {});
   }, []);
 
   // Subscribe to real-time administrative signals & database changes (Web <-> Android App connection)
@@ -283,23 +288,40 @@ export default function AdminDashboard({ onExit }) {
           focusArea: booking.focusArea || booking.focus_area || 'Tarot Assessment'
         });
         setReminderNotice(`✨ New booking alert received live from ${originName}!`);
+        // Refresh data silently
+        loadData(true);
       }
     });
 
+    // Realtime Database Sync for tarot_bookings
     const unsubscribeBookings = subscribeToTarotBookings((payload) => {
-      console.log('⚡ Tarot bookings database changed. Synchronizing...', payload);
-      loadData();
+      console.log('⚡ Tarot bookings database changed. Synchronizing live...', payload);
+      loadData(true);
     });
 
+    // Realtime Database Sync for tarot_newsletter
     const unsubscribeNewsletter = subscribeToTarotNewsletter((payload) => {
-      console.log('⚡ Newsletter subscribers changed. Synchronizing...', payload);
-      loadData();
+      console.log('⚡ Newsletter subscribers changed. Synchronizing live...', payload);
+      loadData(true);
     });
+
+    // Realtime Database Sync for tarot_settings
+    const unsubscribeSettings = subscribeToTarotSettings((payload) => {
+      console.log('⚡ Tarot settings changed remotely. Synchronizing config...', payload);
+      syncAdminPasscodeFromCloud().catch(() => {});
+    });
+
+    // Subtle background sync pulse (every 8s) to ensure absolute consistency across sleep states
+    const syncPulseTimer = setInterval(() => {
+      loadData(true);
+    }, 8000);
 
     return () => {
+      clearInterval(syncPulseTimer);
       if (unsubscribeSignals) unsubscribeSignals();
       if (unsubscribeBookings) unsubscribeBookings();
       if (unsubscribeNewsletter) unsubscribeNewsletter();
+      if (unsubscribeSettings) unsubscribeSettings();
     };
   }, []);
 
