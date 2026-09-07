@@ -15,9 +15,18 @@ import { isAdminAuthenticated } from './lib/adminStore';
 export default function App() {
   const [selectedService, setSelectedService] = useState(READING_SERVICES[0]);
 
+  const isAdminAppMode = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      navigator.userAgent.includes('TarotXAdmin') ||
+      new URLSearchParams(window.location.search).get('admin_app') === '1'
+    );
+  };
+
   // Check if current URL requests the admin console
   const checkIsAdminRoute = () => {
     return (
+      isAdminAppMode() ||
       window.location.pathname.startsWith('/admin') ||
       window.location.hash === '#admin' ||
       new URLSearchParams(window.location.search).get('admin') === 'true'
@@ -52,6 +61,11 @@ export default function App() {
   };
 
   const exitAdmin = () => {
+    if (isAdminAppMode()) {
+      window.location.hash = '#admin';
+      setIsAdminView(true);
+      return;
+    }
     window.location.hash = '';
     if (window.location.pathname.startsWith('/admin')) {
       window.history.pushState({}, '', '/');

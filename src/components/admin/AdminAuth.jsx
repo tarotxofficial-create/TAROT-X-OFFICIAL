@@ -34,14 +34,21 @@ export default function AdminAuth({ onAuthenticated, onExit }) {
       <div className="fixed inset-0 scanline-overlay pointer-events-none opacity-20" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Top return button */}
-        <button
-          onClick={onExit}
-          className="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-gold-300 mb-6 transition-colors group"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-          <span>Return to Public Website</span>
-        </button>
+        {/* Top return or App Mode badge */}
+        {typeof navigator !== 'undefined' && (navigator.userAgent.includes('TarotXAdmin') || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin_app') === '1')) ? (
+          <div className="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-widest text-gold-400/90 mb-6 bg-gold-500/10 border border-gold-500/30 px-3.5 py-1.5 rounded-full shadow-sm shadow-gold-500/10">
+            <ShieldAlert className="w-3.5 h-3.5 text-gold-400" />
+            <span>Tarot X Admin Dedicated App · Sanctuary Secured</span>
+          </div>
+        ) : (
+          <button
+            onClick={onExit}
+            className="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-gold-300 mb-6 transition-colors group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            <span>Return to Public Website</span>
+          </button>
+        )}
 
         {/* Card Container */}
         <div className="bg-obsidian-900/90 border border-gold-500/30 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-gold-500/10 backdrop-blur-xl space-y-8 relative">

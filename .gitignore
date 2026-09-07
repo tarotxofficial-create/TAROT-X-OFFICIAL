@@ -27,3 +27,8 @@ dist-ssr/
 *.sln
 *.sw?
 .vercel
+
+# Android build artifacts
+.gradle/
+**/build/
+local.properties
