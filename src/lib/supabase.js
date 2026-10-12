@@ -1,8 +1,8 @@
 // TAROT X OFFICIAL — Supabase Client & Bookings Store
 import { createClient } from '@supabase/supabase-js';
 
-const DEFAULT_SUPABASE_URL = 'https://qngzfcpnjpabaornddau.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZ3pmY3BuanBhYmFvcm5kZGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1Mzc2MDQsImV4cCI6MjEwMjExMzYwNH0.Uhdbtgi0uJRD2suYX67gIApvxT0o1OvNiy5RD6t6geY';
+const DEFAULT_SUPABASE_URL = 'https://chpozujmnfuykwhfpfdf.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNocG96dWptbmZ1eWt3aGZwZmRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MjI1MzcsImV4cCI6MjEwNDA5ODUzN30.pEhxua5xcYE5ag6DExQkKBKo1YUqS4j1zchSaT4N8Ac';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
