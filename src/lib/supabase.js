@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 const DEFAULT_SUPABASE_URL = 'https://chpozujmnfuykwhfpfdf.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNocG96dWptbmZ1eWt3aGZwZmRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MjI1MzcsImV4cCI6MjEwNDA5ODUzN30.pEhxua5xcYE5ag6DExQkKBKo1YUqS4j1zchSaT4N8Ac';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || DEFAULT_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
@@ -263,13 +263,20 @@ export async function fetchTarotSetting(key, defaultValue = null) {
 export async function saveTarotSetting(key, value) {
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase
+      const { error } = await supabase
         .from('tarot_settings')
-        .upsert({ 
-          key, 
-          value, 
-          updated_at: new Date().toISOString() 
-        });
+        .upsert(
+          { 
+            key, 
+            value, 
+            updated_at: new Date().toISOString() 
+          },
+          { onConflict: 'key' }
+        );
+      if (error) {
+        console.warn('saveTarotSetting notice:', error.message);
+        return false;
+      }
       return true;
     } catch (e) {
       console.warn('saveTarotSetting notice:', e);
